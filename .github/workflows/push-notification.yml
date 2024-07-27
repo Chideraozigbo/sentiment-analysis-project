@@ -8,6 +8,7 @@ on:
 jobs:
   send-email:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -17,45 +18,70 @@ jobs:
       - name: Get push details
         id: push-details
         run: |
-          echo "PUSHER=${{ github.actor }}" >> $GITHUB_OUTPUT
-          echo "BRANCH=${{ github.ref_name }}" >> $GITHUB_OUTPUT
-          echo "TIMESTAMP=$(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
-          echo "COMMIT_MSG=$(git log -1 --pretty=%B)" >> $GITHUB_OUTPUT
-          echo "CHANGES<<EOF" >> $GITHUB_OUTPUT
-          git diff-tree --no-commit-id --name-status -r ${{ github.sha }} >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "PUSHER=${{ github.actor }}" >> $GITHUB_ENV
+          echo "BRANCH=${{ github.ref_name }}" >> $GITHUB_ENV
+          echo "TIMESTAMP=$(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_ENV
+          echo "COMMIT_MSG=$(git log -1 --pretty=%B)" >> $GITHUB_ENV
+          echo "CHANGES<<EOF" >> $GITHUB_ENV
+          git diff-tree --no-commit-id --name-status -r ${{ github.sha }} >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Send email
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
           server_port: 465
-          username: ${{secrets.EMAIL_USER}}
-          password: ${{secrets.EMAIL_PASS}}
+          username: ${{ secrets.EMAIL_USER }}
+          password: ${{ secrets.EMAIL_PASS }}
           subject: New push to ${{ github.repository }}
           body: |
-            Repository Update Notification
-            ===============================
-
-            Repository: ${{ github.repository }}
-            Owner: ${{ github.repository_owner }}
-
-            Push Details:
-            -------------
-            Pusher: ${{ steps.push-details.outputs.PUSHER }}
-            Branch: ${{ steps.push-details.outputs.BRANCH }}
-            Time: ${{ steps.push-details.outputs.TIMESTAMP }}
-
-            Commit Message:
-            ---------------
-            ${{ steps.push-details.outputs.COMMIT_MSG }}
-
-            Changes:
-            --------
-            ${{ steps.push-details.outputs.CHANGES }}
-
-            View the full commit: ${{ github.event.head_commit.url }}
-
-            This is an automated message. Please do not reply.
+            <html>
+            <body>
+              <p>Repository Update Notification</p>
+              <table border="1" cellpadding="10">
+                <tr>
+                  <th>Repository</th>
+                  <td>${{ github.repository }}</td>
+                </tr>
+                <tr>
+                  <th>Owner</th>
+                  <td>${{ github.repository_owner }}</td>
+                </tr>
+                <tr>
+                  <th>Pusher</th>
+                  <td>${{ env.PUSHER }}</td>
+                </tr>
+                <tr>
+                  <th>Branch</th>
+                  <td>${{ env.BRANCH }}</td>
+                </tr>
+                <tr>
+                  <th>Time</th>
+                  <td>${{ env.TIMESTAMP }}</td>
+                </tr>
+                <tr>
+                  <th>Commit Message</th>
+                  <td>${{ env.COMMIT_MSG }}</td>
+                </tr>
+                <tr>
+                  <th>Changes</th>
+                  <td>
+                    <ul>
+                      <li><strong>M:</strong> Modified</li>
+                      <li><strong>A:</strong> Added</li>
+                      <li><strong>D:</strong> Deleted</li>
+                    </ul>
+                    <pre>${{ env.CHANGES }}</pre>
+                  </td>
+                </tr>
+                <tr>
+                  <th>Full Commit</th>
+                  <td><a href="${{ github.event.head_commit.url }}">View the full commit</a></td>
+                </tr>
+              </table>
+              <p>This is an automated message. Please do not reply.</p>
+            </body>
+            </html>
           to: 'chideraozigbo@gmail.com, honordaniel987@gmail.com, onubawinner042@gmail.com'
           from: Auto-Reports
+          content_type: text/html

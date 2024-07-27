@@ -1,0 +1,109 @@
+2024-07-27 18:45:48 - Log initialized
+2024-07-27 18:46:09 - ETL pipeline started
+2024-07-27 18:46:09 - Starting the Extraction Phase
+2024-07-27 18:46:12 - Successfully connected to the API
+2024-07-27 18:46:16 - Successfully connected to the API
+2024-07-27 18:46:20 - Successfully connected to the API
+2024-07-27 18:46:23 - Successfully connected to the API
+2024-07-27 18:46:27 - Successfully connected to the API
+2024-07-27 18:46:30 - Successfully connected to the API
+2024-07-27 18:46:33 - Successfully connected to the API
+2024-07-27 18:46:37 - Successfully connected to the API
+2024-07-27 18:46:40 - Successfully connected to the API
+2024-07-27 18:46:43 - Successfully connected to the API
+2024-07-27 18:46:46 - Successfully connected to the API
+2024-07-27 18:46:50 - Successfully connected to the API
+2024-07-27 18:46:53 - Successfully connected to the API
+2024-07-27 18:46:57 - Successfully connected to the API
+2024-07-27 18:47:01 - Successfully connected to the API
+2024-07-27 18:47:05 - Successfully connected to the API
+2024-07-27 18:47:08 - Successfully connected to the API
+2024-07-27 18:47:12 - Successfully connected to the API
+2024-07-27 18:47:17 - Successfully connected to the API
+2024-07-27 18:47:20 - Successfully connected to the API
+2024-07-27 18:47:23 - Successfully connected to the API
+2024-07-27 18:47:27 - Successfully connected to the API
+2024-07-27 18:47:30 - Successfully connected to the API
+2024-07-27 18:47:34 - Successfully connected to the API
+2024-07-27 18:47:38 - Successfully connected to the API
+2024-07-27 18:47:42 - Successfully connected to the API
+2024-07-27 18:47:45 - Successfully connected to the API
+2024-07-27 18:47:49 - Successfully connected to the API
+2024-07-27 18:47:53 - Successfully connected to the API
+2024-07-27 18:47:59 - Successfully connected to the API
+2024-07-27 18:48:02 - Successfully connected to the API
+2024-07-27 18:48:06 - Successfully connected to the API
+2024-07-27 18:48:11 - Successfully connected to the API
+2024-07-27 18:48:19 - Successfully connected to the API
+2024-07-27 18:48:23 - Successfully connected to the API
+2024-07-27 18:48:26 - Successfully connected to the API
+2024-07-27 18:48:29 - Successfully connected to the API
+2024-07-27 18:48:32 - Successfully connected to the API
+2024-07-27 18:48:36 - Successfully connected to the API
+2024-07-27 18:48:40 - Successfully connected to the API
+2024-07-27 18:48:44 - Successfully connected to the API
+2024-07-27 18:48:47 - Successfully connected to the API
+2024-07-27 18:48:51 - Successfully connected to the API
+2024-07-27 18:48:55 - Successfully connected to the API
+2024-07-27 18:48:58 - Successfully connected to the API
+2024-07-27 18:49:03 - Successfully connected to the API
+2024-07-27 18:49:07 - Successfully connected to the API
+2024-07-27 18:49:11 - Successfully connected to the API
+2024-07-27 18:49:17 - Successfully connected to the API
+2024-07-27 18:49:21 - Successfully connected to the API
+2024-07-27 18:49:24 - Successfully connected to the API
+2024-07-27 18:49:28 - Successfully connected to the API
+2024-07-27 18:49:33 - Successfully connected to the API
+2024-07-27 18:49:37 - Successfully connected to the API
+2024-07-27 18:49:40 - Successfully connected to the API
+2024-07-27 18:49:44 - Successfully connected to the API
+2024-07-27 18:49:47 - Successfully connected to the API
+2024-07-27 18:49:51 - Successfully connected to the API
+2024-07-27 18:49:54 - Successfully connected to the API
+2024-07-27 18:49:58 - Successfully connected to the API
+2024-07-27 18:50:02 - Successfully connected to the API
+2024-07-27 18:50:06 - Successfully connected to the API
+2024-07-27 18:50:09 - Successfully connected to the API
+2024-07-27 18:50:13 - Successfully connected to the API
+2024-07-27 18:50:17 - Successfully connected to the API
+2024-07-27 18:50:21 - Successfully connected to the API
+2024-07-27 18:50:24 - Successfully connected to the API
+2024-07-27 18:50:27 - Successfully connected to the API
+2024-07-27 18:50:31 - Successfully connected to the API
+2024-07-27 18:50:34 - Successfully connected to the API
+2024-07-27 18:50:37 - Successfully connected to the API
+2024-07-27 18:50:40 - Successfully connected to the API
+2024-07-27 18:50:43 - Successfully connected to the API
+2024-07-27 18:50:46 - Successfully connected to the API
+2024-07-27 18:50:51 - Successfully connected to the API
+2024-07-27 18:50:56 - Successfully connected to the API
+2024-07-27 18:51:00 - Successfully connected to the API
+2024-07-27 18:51:06 - Successfully connected to the API
+2024-07-27 18:51:14 - Successfully connected to the API
+2024-07-27 18:51:19 - Successfully connected to the API
+2024-07-27 18:51:23 - Successfully connected to the API
+2024-07-27 18:51:26 - Successfully connected to the API
+2024-07-27 18:51:29 - Successfully connected to the API
+2024-07-27 18:51:38 - Successfully connected to the API
+2024-07-27 18:51:38 - No more pages left to fetch
+2024-07-27 18:51:38 - Saving raw data to file
+2024-07-27 18:51:38 - Successfully saved raw data to /Users/user/Documents/Sentiment Analysis Pipeline/data/raw/raw_data_2024-07-27 18:45:48.json
+2024-07-27 18:51:38 - Finished the Extraction Phase
+2024-07-27 18:51:38 - Starting the Transformation Phase
+2024-07-27 18:51:38 - Initialized empty lists for user details and tweets
+2024-07-27 19:02:31 - Finished extracting user details and tweets
+2024-07-27 19:02:31 - Converting lists to DataFrames
+2024-07-27 19:02:31 - Successfully converted lists to DataFrames
+2024-07-27 19:02:31 - Removed empty or NaN rows from tweets DataFrame
+2024-07-27 19:02:31 - Saving users DataFrame to CSV
+2024-07-27 19:02:31 - Successfully saved users CSV to /Users/user/Documents/Sentiment Analysis Pipeline/data/processed/users/users_2024-07-27 18:45:48.csv
+2024-07-27 19:02:31 - Saving tweets DataFrame to CSV
+2024-07-27 19:02:31 - Successfully saved tweets CSV to /Users/user/Documents/Sentiment Analysis Pipeline/data/processed/users_tweet/tweets_2024-07-27 18:45:48.csv
+2024-07-27 19:02:31 - Finished the Transformation Phase
+2024-07-27 19:02:31 - Starting upload of /Users/user/Documents/Sentiment Analysis Pipeline/data/raw/raw_data_2024-07-27 18:45:48.json to S3 bucket sentimentanalysisprojectpipeline
+2024-07-27 19:02:43 - Successfully uploaded /Users/user/Documents/Sentiment Analysis Pipeline/data/raw/raw_data_2024-07-27 18:45:48.json to S3 bucket sentimentanalysisprojectpipeline at raw/raw_data_2024-07-27 18:45:48.json
+2024-07-27 19:02:43 - Starting upload of /Users/user/Documents/Sentiment Analysis Pipeline/data/processed/users/users_2024-07-27 18:45:48.csv to S3 bucket sentimentanalysisprojectpipeline
+2024-07-27 19:02:46 - Successfully uploaded /Users/user/Documents/Sentiment Analysis Pipeline/data/processed/users/users_2024-07-27 18:45:48.csv to S3 bucket sentimentanalysisprojectpipeline at processed/users/users_2024-07-27 18:45:48.csv
+2024-07-27 19:02:46 - Starting upload of /Users/user/Documents/Sentiment Analysis Pipeline/data/processed/users_tweet/tweets_2024-07-27 18:45:48.csv to S3 bucket sentimentanalysisprojectpipeline
+2024-07-27 19:02:51 - Successfully uploaded /Users/user/Documents/Sentiment Analysis Pipeline/data/processed/users_tweet/tweets_2024-07-27 18:45:48.csv to S3 bucket sentimentanalysisprojectpipeline at processed/tweets/tweets_2024-07-27 18:45:48.csv
+2024-07-27 19:02:51 - ETL pipeline completed

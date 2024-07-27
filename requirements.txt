@@ -1,0 +1,7 @@
+boto3==1.34.149
+botocore==1.34.149
+emoji==2.12.1
+nltk==3.8.1
+pandas==2.2.2
+Requests==2.32.3
+textblob==0.18.0.post0
