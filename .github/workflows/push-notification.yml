@@ -57,5 +57,5 @@ jobs:
             View the full commit: ${{ github.event.head_commit.url }}
 
             This is an automated message. Please do not reply.
-          to: recipient@example.com
-          from: GitHub Actions
+          to: 'chideraozigbo@gmail.com, honordaniel987@gmail.com, onubawinner042@gmail.com'
+          from: Auto-Reports
