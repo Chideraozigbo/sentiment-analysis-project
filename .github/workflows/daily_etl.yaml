@@ -84,34 +84,15 @@ jobs:
           password: ${{ secrets.EMAIL_PASS }}
           subject: "ETL Job Failure Notification"
           body: |
-            <html>
-            <body>
-              <p>The ETL job has failed.</p>
-              <table border="1" cellpadding="10">
-                <tr>
-                  <th>Repository</th>
-                  <td>${{ github.repository }}</td>
-                </tr>
-                <tr>
-                  <th>Branch</th>
-                  <td>${{ github.ref_name }}</td>
-                </tr>
-                <tr>
-                  <th>Timestamp</th>
-                  <td>${{ steps.collect-metadata.outputs.TIMESTAMP }}</td>
-                </tr>
-                <tr>
-                  <th>Failure Step</th>
-                  <td>${{ job.steps[0].name }}</td>
-                </tr>
-                <tr>
-                  <th>Commit Message</th>
-                  <td>${{ github.event.head_commit.message }}</td>
-                </tr>
-              </table>
-              <p>Please check the logs for more details.</p>
-            </body>
-            </html>
+            The ETL job has failed.
+
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+            Timestamp: ${{ steps.collect-metadata.outputs.TIMESTAMP }}
+            Failure Step: ${{ job.steps[0].name }}
+            Commit Message: ${{ github.event.head_commit.message }}
+
+            Please check the logs for more details.
           to: 'chideraozigbo@gmail.com, honordaniel987@gmail.com, onubawinner042@gmail.com'
           from: Auto-Reports
-          content_type: text/html
+          content_type: text/plain

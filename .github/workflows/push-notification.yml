@@ -35,53 +35,24 @@ jobs:
           password: ${{ secrets.EMAIL_PASS }}
           subject: New push to ${{ github.repository }}
           body: |
-            <html>
-            <body>
-              <p>Repository Update Notification</p>
-              <table border="1" cellpadding="10">
-                <tr>
-                  <th>Repository</th>
-                  <td>${{ github.repository }}</td>
-                </tr>
-                <tr>
-                  <th>Owner</th>
-                  <td>${{ github.repository_owner }}</td>
-                </tr>
-                <tr>
-                  <th>Pusher</th>
-                  <td>${{ env.PUSHER }}</td>
-                </tr>
-                <tr>
-                  <th>Branch</th>
-                  <td>${{ env.BRANCH }}</td>
-                </tr>
-                <tr>
-                  <th>Time</th>
-                  <td>${{ env.TIMESTAMP }}</td>
-                </tr>
-                <tr>
-                  <th>Commit Message</th>
-                  <td>${{ env.COMMIT_MSG }}</td>
-                </tr>
-                <tr>
-                  <th>Changes</th>
-                  <td>
-                    <ul>
-                      <li><strong>M:</strong> Modified</li>
-                      <li><strong>A:</strong> Added</li>
-                      <li><strong>D:</strong> Deleted</li>
-                    </ul>
-                    <pre>${{ env.CHANGES }}</pre>
-                  </td>
-                </tr>
-                <tr>
-                  <th>Full Commit</th>
-                  <td><a href="${{ github.event.head_commit.url }}">View the full commit</a></td>
-                </tr>
-              </table>
-              <p>This is an automated message. Please do not reply.</p>
-            </body>
-            </html>
+            Repository Update Notification
+
+            Repository: ${{ github.repository }}
+            Owner: ${{ github.repository_owner }}
+            Pusher: ${{ env.PUSHER }}
+            Branch: ${{ env.BRANCH }}
+            Time: ${{ env.TIMESTAMP }}
+            Commit Message: ${{ env.COMMIT_MSG }}
+
+            Changes:
+            - Modified:
+            - Added:
+            - Deleted:
+            ${{ env.CHANGES }}
+
+            Full Commit: ${{ github.event.head_commit.url }}
+
+            This is an automated message. Please do not reply.
           to: 'chideraozigbo@gmail.com, honordaniel987@gmail.com, onubawinner042@gmail.com'
           from: Auto-Reports
-          content_type: text/html
+          content_type: text/plain
