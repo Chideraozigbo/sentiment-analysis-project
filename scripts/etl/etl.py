@@ -36,6 +36,8 @@ import nltk
 import boto3
 import os
 from botocore.exceptions import ClientError
+import time
+from requests.exceptions import RequestException
 
 # Download the stopwords dataset and the punkt tokenizer models from NLTK
 nltk.download('stopwords')
@@ -44,6 +46,10 @@ nltk.download('punkt')
 # Load my secret file
 config = configparser.ConfigParser()
 config.read('config/secrets.ini')
+
+# Retries Constant
+MAX_RETRIES = 3
+RETRY_DELAY = 5  # seconds
 
 # Access API KEY
 api_key = config['API_KEY']['x-rapidapi-key']
@@ -122,10 +128,12 @@ def save_processed_hashes(file_path, hashes):
                 f.write(f"{_hash}\n")
     else:
         logging('No new hashes to save')
+
 # Extract_API Function
 def extract_api(url="https://twitter-api45.p.rapidapi.com/search.php"):
     """
     Extracts tweets from the specified API endpoint and saves raw data to a JSON file.
+    Includes retry logic for API communication failures.
 
     Args:
         url (str): The URL of the API endpoint to fetch tweets from.
@@ -148,35 +156,45 @@ def extract_api(url="https://twitter-api45.p.rapidapi.com/search.php"):
         if next_cursor:
             querystring['cursor'] = next_cursor
             logging(f'Getting records with cursor id: {next_cursor}')  # Log the current cursor ID
-        response = requests.get(url, headers=header, params=querystring)
-        if response.status_code == 200:
-            logging('Successfully connected to the API')
-            data = response.json()
-
-            # Deduplicate tweets
-            new_hashes = set()
-            for tweet in data.get('timeline', []):
-                tweet_id = tweet.get('tweet_id')
-                tweet_content = tweet.get('text', '')
-                tweet_hash = hashlib.md5(f"{tweet_id}:{tweet_content}".encode()).hexdigest()
-
-                if tweet_hash not in seen_tweets:
-                    seen_tweets.add(tweet_hash)
-                    new_hashes.add(tweet_hash)
-                    all_data.append(tweet)
+        
+        for retry in range(MAX_RETRIES):
+            try:
+                response = requests.get(url, headers=header, params=querystring)
+                response.raise_for_status()  # Raises an HTTPError for bad responses
+                logging('Successfully connected to the API')
+                break  # If successful, break out of the retry loop
+            except RequestException as e:
+                logging(f"API request failed (attempt {retry + 1}/{MAX_RETRIES}): {str(e)}")
+                if retry < MAX_RETRIES - 1:
+                    logging(f"Retrying in {RETRY_DELAY} seconds...")
+                    time.sleep(RETRY_DELAY)
                 else:
-                    logging(f'Duplicate tweet found: {tweet_id}')
+                    logging("Max retries reached. Extraction failed.")
+                    return None, None
+        
+        data = response.json()
 
-            # Check for next cursor
-            next_cursor = data.get('next_cursor')
-            if not next_cursor:
-                logging('No more pages left to fetch')
-                break
+        # Deduplicate tweets
+        new_hashes = set()
+        for tweet in data.get('timeline', []):
+            tweet_id = tweet.get('tweet_id')
+            tweet_content = tweet.get('text', '')
+            tweet_hash = hashlib.md5(f"{tweet_id}:{tweet_content}".encode()).hexdigest()
+
+            if tweet_hash not in seen_tweets:
+                seen_tweets.add(tweet_hash)
+                new_hashes.add(tweet_hash)
+                all_data.append(tweet)
             else:
-                logging(f'Moving to the next cursor: {next_cursor}')  # Log moving to the next cursor
-        else:
-            logging(f'Failed to establish connection, status code: {response.status_code}')
+                logging(f'Duplicate tweet found: {tweet_id}')
+
+        # Check for next cursor
+        next_cursor = data.get('next_cursor')
+        if not next_cursor:
+            logging('No more pages left to fetch')
             break
+        else:
+            logging(f'Moving to the next cursor: {next_cursor}')  # Log moving to the next cursor
 
     # Saving raw data
     logging('Saving raw data to file')
