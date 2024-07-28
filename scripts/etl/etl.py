@@ -147,7 +147,7 @@ def extract_api(url="https://twitter-api45.p.rapidapi.com/search.php"):
         "x-rapidapi-host": api_host
     }
 
-    querystring = {"query": "air peace", "search_type": "Top"}
+    querystring = {"query": "piggyvest", "search_type": "Top"}
     all_data = []
     next_cursor = None
     seen_tweets = load_processed_hashes(processed_hashes_file)  # Load previously processed tweet hashes

@@ -92,7 +92,7 @@ jobs:
             Records Processed: ${{ env.RECORDS_PROCESSED }}
 
             This is an automated message. Please do not reply.
-          to: 'chideraozigbo@gmail.com, honordaniel987@gmail.com, onubawinner042@gmail.com'
+          to: 'chideraozigbo@gmail.com, honourdaniel987@gmail.com, onubawinner042@gmail.com'
           from: Auto-Reports
           content_type: text/plain
 

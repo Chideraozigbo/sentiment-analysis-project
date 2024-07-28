@@ -2,29 +2,31 @@
 
 ## Table of Contents
 1. [Project Overview](#project-overview)
-2. [Selected Brand: Moniepoint](#selected-brand-moniepoint)
+2. [Selected Brand: PiggyVest](#selected-brand-moniepoint)
 3. [Objectives](#objectives)
 4. [Contributors](#contributors)
 5. [Team Members Task](#team-members-task)
-6. [Why Choosing Moniepoint](#why-moniepoint-was-chosen)
+6. [Project Timeline](#project-timeline)
+7. [Why Choosing Piggyvest](#why-moniepoint-was-chosen)
    - [Proposed Brand](#proposed-brands)
-5. [System Architecture](#system-architecture)
-6. [Technology Stack](#technology-stack)
-7. [Dependencies](#dependencies)
-8. [File Structure](#file-structure)
-9. [Dataset Breakdown](#)
-10. [Important Links](#important-links)
-11. [ETL Scripts Details](#)
-12. [GitHub Actions](#github-actions)
-13. [Setup Instructions](#setup-instructions)
-14. [IAM Configuration](#iam-configuration-guide)
+8. [System Architecture](#system-architecture)
+9. [Technology Stack](#technology-stack)
+10. [Dependencies](#dependencies)
+11. [File Structure](#file-structure)
+12. [Dataset Breakdown](#dataset-breakdown)
+13. [Important Links](#important-links)
+14. [ETL Scripts Details](#etl-script-details)
+15. [GitHub Actions](#github-actions)
+16. [Setup Instructions](#setup-instructions)
+17. [IAM Configuration](#iam-configuration-guide)
 
 ## Project Overview
 This project aims to perform sentiment analysis on Twitter data to provide insights into public sentiment towards a specific brand. The pipeline involves extracting data from the Twitter API, transforming the raw data into structured formats, and loading the processed data into an AWS S3 bucket. Snowpipe listens for new files in the S3 bucket and loads them into a Snowflake data warehouse for further analysis. The orchestration of this pipeline is managed using GitHub Actions due to cost considerations and ease of use.
 
-## Selected Brand: Moniepoint
-### Why Moniepoint?
-Moniepoint is a leading financial technology company known for its innovative solutions in the digital payments space. The choice of Moniepoint was influenced by its significant presence on social media and the growing public interest in its services. By analyzing sentiment around Moniepoint, we aim to gain valuable insights into public perception and identify areas for improvement.
+## Selected Brand: Piggvest
+### Why Piggvest?
+Piggvest is a prominent financial technology company renowned for its innovative savings and investment solutions. The choice of Piggvest was driven by its substantial social media presence and the increasing public interest in its services. By analyzing sentiment around Piggvest, we aim to gain valuable insights into public perception and identify areas for improvement.
+
 
 ## Objectives
 - **Sentiment Analysis:** To gauge public sentiment towards Moniepoint based on Twitter data.
@@ -65,19 +67,70 @@ Moniepoint is a leading financial technology company known for its innovative so
   - Integrated the sentiment analysis models into the ETL pipeline for automated scoring of new tweets.
   - Collaborated with the data analyst to interpret model results and derive actionable insights.
 
-## Why Moniepoint Was Chosen
+## Project Timeline
 
-Moniepoint was selected as the brand for this project due to several compelling reasons:
+Our project is divided into several phases, with tasks distributed among team members based on their roles. Here's a breakdown of our timeline:
 
-1. **Market Presence:** Moniepoint has a significant presence in the financial technology sector, making it a relevant and impactful brand to analyze.
+### Week 1-2: Project Setup and Infrastructure
+- **Chidera Ozigbo (Data Engineer)**: 
+  - Set up GitHub repository
+  - Design and implement system architecture
+  - Configure AWS S3 bucket
+  - Set up Snowflake data warehouse
+  - Implement Twitter API connection
+  - Set up GitHub Actions for automated runs
+
+### Week 3-4: Data Extraction and Processing
+- **Chidera Ozigbo (Data Engineer)**: 
+  - Develop data extraction script
+  - Implement error handling and logging
+  - Create data cleaning and transformation pipeline
+  - Develop data validation checks
+  - Implement Snowpipe for data ingestion
+  - Optimize ETL pipeline for performance
+
+### Week 5-6: Data Analysis and Visualization
+- **Honor Daniel (Data Analyst)**: 
+  - Conduct exploratory data analysis
+  - Develop SQL queries for initial insights
+  - Design dashboard layout
+  - Implement dashboard using chosen visualization tool
+  - Create visualization scripts
+- **Onuba Winner (Data Scientist)**: 
+  - Implement sentiment analysis using TextBlob
+  - Develop advanced SQL queries for trend analysis
+  - Implement anomaly detection algorithms
+  - Conduct in-depth statistical analysis
+
+### Week 7-8: Final Integration, Documentation, and Presentation
+- **Chidera Ozigbo (Data Engineer)**: 
+  - Integrate all components of the pipeline
+  - Conduct end-to-end testing
+  - Implement security measures and access controls
+  - Prepare deployment documentation
+- **Honor Daniel (Data Analyst)**: 
+  - Finalize dashboard with real-time data updates
+  - Prepare final presentation of insights
+  - Create user guide for dashboard
+- **Onuba Winner (Data Scientist)**: 
+  - Develop predictive models based on sentiment data
+  - Conduct performance evaluation of models
+  - Prepare technical documentation of analysis and models
+
+## Why Piggyvest Was Chosen
+
+Piggyvest was selected as the brand for this project due to several compelling reasons:
+
+1. **Market Presence:** Piggyvest has a significant presence in the financial technology sector, making it a relevant and impactful brand to analyze.
 2. **Customer Interaction:** The brand actively engages with its customers on social media, providing ample data for sentiment analysis and trend identification.
-3. **Growth Potential:** As a growing fintech company, understanding public sentiment and customer feedback is crucial for Moniepoint's strategic decisions and growth.
-4. **Diverse Data:** Moniepoint's interactions on platforms like Twitter provide diverse and rich data, ideal for developing robust sentiment analysis models.
-5. **Business Impact:** Insights gained from this analysis can help Moniepoint improve customer satisfaction, enhance their services, and make data-driven business decisions.
+3. **Growth Potential:** As a growing fintech company, understanding public sentiment and customer feedback is crucial for Piggyvest's strategic decisions and growth.
+4. **Diverse Data:** Piggyvest's interactions on platforms like Twitter provide diverse and rich data, ideal for developing robust sentiment analysis models.
+5. **Innovative Solutions:** Piggyvest is known for its innovative savings and investment solutions, making it an interesting subject for analyzing customer sentiment and feedback.
+
 
 ### Proposed Brands
 
-Here are the lists of brands that was considered before we chose Moniepoint.
+Here are the lists of brands that was considered before we chose Piggvest.
 
 1. Cowrywise
 2. MTN
@@ -127,57 +180,65 @@ Snowflake
 
 This project relies on several Python libraries and modules to perform various tasks, including configuration management, data requests, data processing, and natural language processing (NLP). Below is a detailed breakdown of each dependency:
 
-Configparser
-- Purpose: Used for handling configuration files. It allows the script to read configuration settings from secrets.ini file, which includes API keys and AWS credentials.
-- Usage: Reading API keys and credentials securely from a configuration file.
+- **Configparser**
+  - Purpose: Used for handling configuration files. It allows the script to read configuration settings from `secrets.ini` file, which includes API keys and AWS credentials.
+  - Usage: Reading API keys and credentials securely from a configuration file.
 
-Requests
-- Enables the script to send HTTP requests. It's essential for interacting with APIs, such as the Twitter API.
-- Usage: Fetching data from external APIs.
+- **Requests**
+  - Purpose: Enables the script to send HTTP requests. It's essential for interacting with APIs, such as the Twitter API.
+  - Usage: Fetching data from external APIs.
 
-Pandas
-- Purpose: A powerful data manipulation and analysis library. It provides data structures like DataFrames.
-- Usage: Processing and transforming the extracted data into a structured format for analysis.
+- **Pandas**
+  - Purpose: A powerful data manipulation and analysis library. It provides data structures like DataFrames.
+  - Usage: Processing and transforming the extracted data into a structured format for analysis.
 
-JSON
-- Purpose: Provides methods for parsing JSON formatted data.
-- Usage: Handling JSON responses from APIs.
+- **JSON**
+  - Purpose: Provides methods for parsing JSON formatted data.
+  - Usage: Handling JSON responses from APIs.
 
-Datetime
-- Purpose: Supplies classes for manipulating dates and times.
-- Usage: Managing timestamps for logging and data processing.
+- **Datetime**
+  - Purpose: Supplies classes for manipulating dates and times.
+  - Usage: Managing timestamps for logging and data processing.
 
-Hashlib
-- Purpose: Implements secure hash algorithms.
-- Usage: Creating unique hashes for tweets to avoid processing duplicates.
+- **Hashlib**
+  - Purpose: Implements secure hash algorithms.
+  - Usage: Creating unique hashes for tweets to avoid processing duplicates.
 
-Re(Regular Expressions)
-- Purpose: Provides support for regular expressions.
-- Usage: Cleaning and preprocessing text data.
+- **Re (Regular Expressions)**
+  - Purpose: Provides support for regular expressions.
+  - Usage: Cleaning and preprocessing text data.
 
-Emoji
-- Purpose: Allows the handling of emojis in text.
-- Usage: Detecting and removing or interpreting emojis in tweets.
+- **Emoji**
+  - Purpose: Allows the handling of emojis in text.
+  - Usage: Detecting and removing or interpreting emojis in tweets.
 
-Textblob
-- Purpose: A simple NLP library built on NLTK and Pattern.
-- Usage: Lemmatization and text processing.
+- **Textblob**
+  - Purpose: A simple NLP library built on NLTK and Pattern.
+  - Usage: Lemmatization and text processing.
 
-NLTK (Natural Language Toolkit)
-- Purpose: A comprehensive library for NLP.
-- Usage: Tokenizing text and removing stopwords.
+- **NLTK (Natural Language Toolkit)**
+  - Purpose: A comprehensive library for NLP.
+  - Usage: Tokenizing text and removing stopwords.
 
-Boto3
-- Purpose: The Amazon Web Services (AWS) SDK for Python. It enables Python developers to create, configure, and manage AWS services.
-- Usage: Interacting with AWS services like S3.
+- **Boto3**
+  - Purpose: The Amazon Web Services (AWS) SDK for Python. It enables Python developers to create, configure, and manage AWS services.
+  - Usage: Interacting with AWS services like S3.
 
-OS
-- Purpose: Provides a way of using operating system dependent functionality.
-- Usage: Handling file paths and environment variables.
+- **OS**
+  - Purpose: Provides a way of using operating system dependent functionality.
+  - Usage: Handling file paths and environment variables.
 
-Botocore Exceptions
-- Purpose: Provides a base exception class for Boto3.
-- Usage: Handling exceptions when interacting with AWS services.
+- **Botocore Exceptions**
+  - Purpose: Provides a base exception class for Boto3.
+  - Usage: Handling exceptions when interacting with AWS services.
+
+- **Time**
+  - Purpose: Provides various time-related functions.
+  - Usage: Managing delays and handling timing for requests.
+
+- **Requests Exceptions**
+  - Purpose: Provides exception handling for Requests library.
+  - Usage: Handling exceptions when sending HTTP requests.
 
 
 ## File Structure
@@ -323,7 +384,7 @@ The `load_to_s3` function uploads files to an AWS S3 bucket. It takes the file p
 The `main` function orchestrates the ETL process by calling the extraction, transformation, and loading functions sequentially. It logs the start and completion of the ETL pipeline.
 
 ## GitHub Actions
-### Daily ETL Workflow
+### Weekly ETL Workflow
 This workflow runs every Tuesday at noon UTC and can also be triggered manually. It performs the following steps:
 1. **Checkout repository:** Checks out the code from the repository.
 2. **Set up Python:** Sets up Python 3.11.5.
@@ -346,13 +407,13 @@ This workflow triggers on every push to any branch and performs the following st
 
 ## Setup Instructions
 
-## Prerequisites
+### Prerequisites
 - Python 3.9 or later
 - Git
 - Rapid API account
 - A GitHub account
 
-## Step-by-Step Setup
+### Step-by-Step Setup
 
 ### 1. Subscribe to RapidAPI
 
