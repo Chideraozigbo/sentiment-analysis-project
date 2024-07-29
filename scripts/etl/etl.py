@@ -34,7 +34,7 @@ nltk.download('punkt', quiet=True)
 
 # Load my secret file
 config = configparser.ConfigParser()
-config.read('config/secrets.ini')
+config.read('/Users/user/Documents/Sentiment Analysis Pipeline/config/secrets.ini')
 
 # Retries Constant
 MAX_RETRIES = 3
@@ -57,16 +57,16 @@ now = datetime.now()
 formatted_time = now.strftime(time_format)
 
 # Parameters
-raw_file_path = 'data/raw/'
+raw_file_path = '/Users/user/Documents/Sentiment Analysis Pipeline/data/raw/'
 raw_file_name = f'raw_data_{formatted_time}.json'
 raw_file_format = os.path.join(raw_file_path, raw_file_name)
-log_file_path = 'logs/'
+log_file_path = '/Users/user/Documents/Sentiment Analysis Pipeline/logs/'
 log_file = os.path.join(log_file_path, 'etl_log.txt')
 processed_tweet_ids_file = os.path.join(log_file_path, 'processed_tweet_hashes.txt')
 
 # CSV file paths
-users_csv_path = f'data/processed/users/users_{formatted_time}.csv'
-tweets_csv_path = f'data/processed/users_tweet/tweets_{formatted_time}.csv'
+users_csv_path = f'/Users/user/Documents/Sentiment Analysis Pipeline/data/processed/users/users_{formatted_time}.csv'
+tweets_csv_path = f'/Users/user/Documents/Sentiment Analysis Pipeline/data/processed/users_tweet/tweets_{formatted_time}.csv'
 
 # Create necessary directories
 os.makedirs(raw_file_path, exist_ok=True)
@@ -123,7 +123,8 @@ def save_processed_tweet_ids(file_path, tweet_ids):
                 f.write(f"{tweet_id}\n")
     else:
         logging('No new tweet IDs to save')
-
+#%%       
+# Extract Function
 def extract_api(url="https://twitter-api45.p.rapidapi.com/search.php"):
     """
     Extracts tweets from the specified API endpoint and saves raw data to a JSON file.
@@ -219,7 +220,8 @@ def extract_api(url="https://twitter-api45.p.rapidapi.com/search.php"):
     logging(f'Added {len(new_tweet_ids)} new tweet IDs to processed_tweet_ids.txt')
     logging('Finished the Extraction Phase')
     return all_data, raw_file_format
-
+#%%
+# Transform Function
 def transform(data):
     """
     Transforms the extracted tweet data into structured CSV files.
@@ -299,7 +301,7 @@ def transform(data):
             "retweets": tweet.get('retweets', 0),
             "replies": tweet.get('replies', 0),
             "quotes": tweet.get('quotes', 0),
-            "views": tweet.get('views', 0),
+            "view_count": tweet.get('views', 0),
             "hashtags": hashtag_text
         }
         tweets.append(tweet_info)
@@ -346,7 +348,8 @@ def transform(data):
     logging(f'Successfully saved tweets data to {tweets_csv_path}')
 
     return users_csv_path, tweets_csv_path
-
+#%%
+# load to s3 function
 def load_to_s3(file_path, bucket_name, object_name=None):
     """
     Upload a file to an S3 bucket.
@@ -376,7 +379,8 @@ def load_to_s3(file_path, bucket_name, object_name=None):
     except ClientError as e:
         logging(f'Error uploading file to S3: {e}')
         return False
-
+#%%    
+# main function
 def main():
     """
     Main function to orchestrate the ETL pipeline.
