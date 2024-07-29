@@ -6,27 +6,16 @@ This script performs an ETL (Extract, Transform, Load) process on Twitter data. 
 - Transformation of raw tweet data into structured CSV files
 - Uploading of raw and processed data to an AWS S3 bucket
 
-Dependencies:
-- configparser
-- requests
-- pandas
-- json
-- datetime
-- hashlib
-- re
-- emoji
-- textblob
-- nltk
-- boto3
+The script also implements deduplication of tweets across multiple runs by maintaining
+a record of processed tweet IDs.
 """
-
+#%%
 # Import Libraries
 import configparser
 import requests
 import pandas as pd
 import json
 from datetime import datetime
-import hashlib
 import re
 import emoji
 from textblob import Word
@@ -45,7 +34,7 @@ nltk.download('punkt')
 
 # Load my secret file
 config = configparser.ConfigParser()
-config.read('config/secrets.ini')
+config.read('/Users/user/Desktop/Sentiment-Analysis-Project/config/secrets.ini')
 
 # Retries Constant
 MAX_RETRIES = 3
@@ -68,16 +57,16 @@ now = datetime.now()
 formatted_time = now.strftime(time_format)
 
 # Parameters
-raw_file_path = 'data/raw/'
+raw_file_path = '/Users/user/Desktop/Sentiment-Analysis-Project/data/raw/'
 raw_file_name = f'raw_data_{formatted_time}.json'
 raw_file_format = raw_file_path + raw_file_name
-log_file_path = 'logs/'
+log_file_path = '/Users/user/Desktop/Sentiment-Analysis-Project/logs/'
 log_file = os.path.join(log_file_path, 'etl_log.txt')
-processed_hashes_file = os.path.join(log_file_path, 'processed_tweet_hashes.txt')
+processed_tweet_ids_file = os.path.join(log_file_path, 'processed_tweet_ids.txt')
 
 # CSV file paths
-users_csv_path = f'data/processed/users/users_{formatted_time}.csv'
-tweets_csv_path = f'data/processed/users_tweet/tweets_{formatted_time}.csv'
+users_csv_path = f'/Users/user/Desktop/Sentiment-Analysis-Project/data/processed/users/users_{formatted_time}.csv'
+tweets_csv_path = f'/Users/user/Desktop/Sentiment-Analysis-Project/data/processed/users_tweet/tweets_{formatted_time}.csv'
 
 # Initialize log file to clear previous contents
 with open(log_file, 'w') as f:
@@ -96,39 +85,40 @@ def logging(message):
     with open(log_file, 'a') as f:
         f.write(f"{formatted_time} - {message}\n")
 
-# load_processed_hashes Function
-def load_processed_hashes(file_path):
+def load_processed_tweet_ids(file_path):
     """
-    Loads processed tweet hashes from a file.
+    Load previously processed tweet IDs from a file.
 
     Args:
-        file_path (str): The path to the file containing processed tweet hashes.
+        file_path (str): Path to the file containing processed tweet IDs.
 
     Returns:
-        set: A set of tweet hashes that have been processed.
+        set: A set of previously processed tweet IDs.
     """
     if os.path.exists(file_path):
         with open(file_path, 'r') as f:
-            return set(line.strip() for line in f)
+            tweet_ids = set(line.strip() for line in f)
+        logging(f"Loaded {len(tweet_ids)} processed tweet IDs from {file_path}")
+        return tweet_ids
+    logging(f"No processed tweet IDs file found at {file_path}, starting fresh.")
     return set()
 
-# save_processed_hashes Function
-def save_processed_hashes(file_path, hashes):
+def save_processed_tweet_ids(file_path, tweet_ids):
     """
-    Saves new tweet hashes to a file.
+    Save newly processed tweet IDs to a file.
 
     Args:
-        file_path (str): The path to the file to save processed tweet hashes.
-        hashes (set): A set of tweet hashes to save.
+        file_path (str): Path to the file where tweet IDs will be saved.
+        tweet_ids (set): Set of tweet IDs to be saved.
     """
-    if hashes:
-        logging(f'Saving {len(hashes)} new hashes to {file_path}')
+    if tweet_ids:
+        logging(f'Saving {len(tweet_ids)} new tweet IDs to {file_path}')
         with open(file_path, 'a') as f:
-            for _hash in hashes:
-                f.write(f"{_hash}\n")
+            for tweet_id in tweet_ids:
+                f.write(f"{tweet_id}\n")
     else:
-        logging('No new hashes to save')
-
+        logging('No new tweet IDs to save')
+#%%
 # Extract_API Function
 def extract_api(url="https://twitter-api45.p.rapidapi.com/search.php"):
     """
@@ -139,7 +129,8 @@ def extract_api(url="https://twitter-api45.p.rapidapi.com/search.php"):
         url (str): The URL of the API endpoint to fetch tweets from.
 
     Returns:
-        tuple: A tuple containing the extracted data and the path to the saved raw data file.
+        tuple: A tuple containing the list of new tweets and the path to the raw data file.
+               Returns (None, None) if extraction fails.
     """
     logging('Starting the Extraction Phase')
     header = {
@@ -150,19 +141,24 @@ def extract_api(url="https://twitter-api45.p.rapidapi.com/search.php"):
     querystring = {"query": "piggyvest", "search_type": "Top"}
     all_data = []
     next_cursor = None
-    seen_tweets = load_processed_hashes(processed_hashes_file)  # Load previously processed tweet hashes
+    seen_tweet_ids = load_processed_tweet_ids(processed_tweet_ids_file)
+    logging(f"Loaded {len(seen_tweet_ids)} previously processed tweet IDs")
+
+    total_tweets_seen = 0
+    total_tweets_dropped = 0
+    new_tweet_ids = set()
 
     while True:
         if next_cursor:
             querystring['cursor'] = next_cursor
-            logging(f'Getting records with cursor id: {next_cursor}')  # Log the current cursor ID
+            logging(f'Getting records with cursor id: {next_cursor}')
         
         for retry in range(MAX_RETRIES):
             try:
                 response = requests.get(url, headers=header, params=querystring)
-                response.raise_for_status()  # Raises an HTTPError for bad responses
+                response.raise_for_status()
                 logging('Successfully connected to the API')
-                break  # If successful, break out of the retry loop
+                break
             except RequestException as e:
                 logging(f"API request failed (attempt {retry + 1}/{MAX_RETRIES}): {str(e)}")
                 if retry < MAX_RETRIES - 1:
@@ -179,21 +175,26 @@ def extract_api(url="https://twitter-api45.p.rapidapi.com/search.php"):
             logging('No data received from API or unexpected data format.')
             return None, None
 
-        # Deduplicate tweets
-        new_hashes = set()
+        tweets_in_batch = len(data.get('timeline', []))
+        total_tweets_seen += tweets_in_batch
+        logging(f"Received {tweets_in_batch} tweets in this batch. Total tweets seen so far: {total_tweets_seen}")
+
+        dropped_in_batch = 0
         for tweet in data.get('timeline', []):
             tweet_id = tweet.get('tweet_id')
-            tweet_content = tweet.get('text', '')
-            tweet_hash = hashlib.md5(f"{tweet_id}:{tweet_content}".encode()).hexdigest()
 
-            if tweet_hash not in seen_tweets:
-                seen_tweets.add(tweet_hash)
-                new_hashes.add(tweet_hash)
-                all_data.append(tweet)
-            else:
-                logging(f'Duplicate tweet found: {tweet_id}')
+            if tweet_id in seen_tweet_ids:
+                dropped_in_batch += 1
+                total_tweets_dropped += 1
+                logging(f'Duplicate tweet found: {tweet_id}. Dropped.')
+                continue
 
-        # Check for next cursor
+            seen_tweet_ids.add(tweet_id)
+            new_tweet_ids.add(tweet_id)
+            all_data.append(tweet)
+
+        logging(f"Processed batch: {tweets_in_batch - dropped_in_batch} new tweets, {dropped_in_batch} duplicates dropped")
+        
         next_cursor = data.get('next_cursor')
         if not next_cursor:
             logging('No more pages left to fetch')
@@ -210,21 +211,23 @@ def extract_api(url="https://twitter-api45.p.rapidapi.com/search.php"):
     else:
         logging('No data to save.')
     
-    save_processed_hashes(processed_hashes_file, new_hashes)  # Save new tweet hashes
+    save_processed_tweet_ids(processed_tweet_ids_file, new_tweet_ids)
+    logging(f'Added {len(new_tweet_ids)} new tweet IDs to processed_tweet_ids.txt')
     logging('Finished the Extraction Phase')
     return all_data, raw_file_format
 
-
+#%%
 # Transform Function
 def transform(data):
     """
     Transforms the extracted tweet data into structured CSV files.
 
     Args:
-        data (list): A list of raw tweet data.
+        data (list): A list of dictionaries containing raw tweet data.
 
     Returns:
         tuple: A tuple containing the paths to the saved users and tweets CSV files.
+               Returns (None, None) if transformation fails.
     """
     if data is None:
         logging('No data to transform. Exiting transformation phase.')
@@ -310,22 +313,22 @@ def transform(data):
     df_users_tweet = pd.DataFrame(tweets)
     logging('Successfully converted lists to DataFrames')
 
-    # Drop duplicate user IDs
-    initial_user_count = len(df_users)  # Get initial count of users
-    df_users.drop_duplicates(subset=['user_id'], inplace=True)  # Drop duplicate user IDs
-    final_user_count = len(df_users)  # Get final count of users after dropping duplicates
-    dropped_user_count = initial_user_count - final_user_count  # Calculate the number of dropped user IDs
+    # Drop Duplicates User ID
+    initial_user_count = len(df_users) # Get initial counts of User ID
+    df_users.drop_duplicates(subset=['user_id'], inplace=True) # Drop duplicate user IDs
+    final_user_count = len(df_users) # Get final count of users after dropping duplicates
+    dropped_user_count = initial_user_count - final_user_count # Calculate the number of dropped user IDs
 
     # Logging the number of duplicate user IDs dropped
     logging(f'{dropped_user_count} duplicate user IDs dropped out of {initial_user_count} total users.')
 
     # Drop rows where 'text' is empty or NaN
-    initial_tweet_count = len(df_users_tweet)  # Get initial count of tweets
-    df_users_tweet.dropna(subset=['text'], inplace=True)  # Drop rows with empty or NaN text
-    df_users_tweet = df_users_tweet[df_users_tweet['text'].str.strip() != '']  # Drop rows where 'text' is empty after stripping spaces
-    final_tweet_count = len(df_users_tweet)  # Get final count of tweets after dropping empty text
+    initial_tweet_count = len(df_users_tweet) # Get initial count of tweets
+    df_users_tweet.dropna(subset=['text'], inplace=True) # Drop rows with empty or NaN text
+    df_users_tweet = df_users_tweet[df_users_tweet['text'].str.strip() != ''] # Drop rows where 'text' is empty after stripping spaces
+    final_tweet_count = len(df_users_tweet) # Get final count of tweets after dropping empty text
     dropped_tweet_count = initial_tweet_count - final_tweet_count  # Calculate the number of dropped tweets
-
+    
     # Logging the number of tweets dropped due to empty or NaN text
     logging(f'{dropped_tweet_count} tweets with empty or NaN text dropped out of {initial_tweet_count} total tweets.')
 
@@ -336,21 +339,21 @@ def transform(data):
     logging('Finished the Transformation Phase')
     logging(f'Successfully saved users data to {users_csv_path}')
     logging(f'Successfully saved tweets data to {tweets_csv_path}')
-    
-    return users_csv_path, tweets_csv_path
 
+    return users_csv_path, tweets_csv_path
+#%%
 # load_to_s3 Function
 def load_to_s3(file_path, bucket_name, object_name=None):
     """
-    Uploads a file to an AWS S3 bucket.
+    Upload a file to an S3 bucket.
 
     Args:
         file_path (str): The path to the file to upload.
-        bucket_name (str): The name of the S3 bucket to upload to.
-        object_name (str, optional): The S3 object name. Defaults to None.
+        bucket_name (str): The name of the S3 bucket.
+        object_name (str, optional): The S3 object name. If not specified, the file name is used.
 
     Returns:
-        bool: True if the file was uploaded successfully, False otherwise.
+        bool: True if file was uploaded, else False.
     """
     logging(f'Starting the Load Phase for {file_path}')
     if object_name is None:
@@ -369,11 +372,14 @@ def load_to_s3(file_path, bucket_name, object_name=None):
     except ClientError as e:
         logging(f'Error uploading file to S3: {e}')
         return False
-
-# load_to_s3 Function
+#%%
+# main Function
 def main():
     """
-    The main function that orchestrates the ETL process.
+    Main function to orchestrate the ETL pipeline.
+
+    This function coordinates the extraction, transformation, and loading phases of the pipeline.
+    It handles any failures in each phase and ensures proper logging throughout the process.
     """
     logging('Starting the ETL pipeline')
 
@@ -401,3 +407,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# %%

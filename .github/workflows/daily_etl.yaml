@@ -8,7 +8,6 @@ on:
 jobs:
   run-etl:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -45,6 +44,11 @@ jobs:
         id: run-etl
         run: python scripts/etl/etl.py
 
+  collect-metadata:
+    runs-on: ubuntu-latest
+    needs: run-etl
+    if: always()  # This job will run regardless of the outcome of the run-etl job
+    steps:
       - name: Collect metadata
         id: collect-metadata
         run: |
@@ -88,7 +92,7 @@ jobs:
 
             Repository: ${{ github.repository }}
             Branch: ${{ github.ref_name }}
-            Timestamp: ${{ steps.collect-metadata.outputs.TIMESTAMP }}
+            Timestamp: ${{ needs.collect-metadata.outputs.TIMESTAMP }}
             Records Processed: ${{ env.RECORDS_PROCESSED }}
 
             This is an automated message. Please do not reply.
@@ -114,7 +118,7 @@ jobs:
 
             Repository: ${{ github.repository }}
             Branch: ${{ github.ref_name }}
-            Timestamp: ${{ steps.collect-metadata.outputs.TIMESTAMP }}
+            Timestamp: ${{ needs.collect-metadata.outputs.TIMESTAMP }}
             Failure Step: ${{ job.steps[0].name }}
             Commit Message: ${{ github.event.head_commit.message }}
 

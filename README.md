@@ -367,170 +367,199 @@ File Structure
 
 ## ETL Script Details
 
+### Loading Processed Tweet IDs
+
+The `load_processed_tweet_ids` function is designed to manage and track tweet IDs that have already been processed. This prevents duplicate processing by checking against previously handled tweet IDs. Below is a detailed description of how this function works.
+
+### Steps Performed During Loading
+1. **Check File Existence:**
+
+   - The function first checks if the specified file exists at the provided file_path. This ensures that data loading is attempted only if the file is present.
+
+2. **Read and Parse IDs:**
+
+    - If the file exists, it is opened, and each line (representing a tweet ID) is read. Each ID is stripped of any leading or trailing whitespace and added to a set. The use of a set ensures that each ID is unique and avoids duplicates.
+
+3. **Logging:**
+
+    - After loading the `tweet IDs`, the function logs the number of IDs read from the file. This logging helps track the number of processed IDs and maintains transparency in the data loading process.
+    - If the file does not exist, a log message is generated indicating that no processed `tweet IDs` file was found, and the function starts fresh with an empty set.
+4. **Return Data:**
+
+    - The function returns a set of `tweet IDs` that have been previously processed. This set can be used to check if a tweet has already been handled, preventing duplicate processing.
+
+### Saving Processed Tweet IDs
+The `save_processed_tweet_ids` function is designed to store tweet IDs that have been newly processed. This ensures that processed tweets are recorded and can be referenced in the future to prevent reprocessing. Below is a detailed description of how this function works.
+
+### Steps Performed During Saving
+1. **Check for New IDs:**
+    - The function first checks if the `tweet_ids` set is not empty. This ensures that only new tweet IDs are saved, and the file is not updated unnecessarily. 
+2. **Logging:**
+    - If there are new `tweet IDs `to save, the function logs the number of IDs being saved and the file path. This helps track the saving process and ensures transparency in data handling.
+    - If there are no new `tweet IDs` to save, a log message is generated indicating that there are no new tweet IDs to save.
+3. **Append New IDs to File:**
+    - The function opens the specified file in append mode ('a'). This ensures that new tweet IDs are added to the existing file without overwriting the current contents.
+    - Each `tweet ID` in the tweet_ids set is written to the file, one per line. This allows for easy tracking and future reference. 
+
 ### Extraction
 
-The `extract_api` function connects to the Twitter API, fetches tweets, and saves them as raw JSON files. It handles pagination and deduplication by checking for processed tweet hashes. The function logs each step, including successful connections and data saving. Additionally, it checks if the data is empty or `None` and logs a message if no data is received or if the data format is unexpected.
+
+The `extract_api` function connects to a specified Twitter API endpoint, fetches tweets, and saves them as raw JSON files. It handles pagination and deduplication by checking for processed tweet IDs. The function logs each step, including successful connections and data saving. Additionally, it checks if the data is empty or `None` and logs a message if no data is received or if the data format is unexpected.
 
 ### Steps Performed During Extraction
 
 1. **Starting the Extraction Phase:**
-    - Logging the start of the extraction phase.
-    - Setting up the API headers with the required API key and host.
+    - Logs the start of the extraction phase.
+    - Sets up the API headers with the required API key and host.
 
 2. **Initializing Query Parameters and Data Structures:**
-    - Defining the query parameters to search for tweets related to "piggyvest".
-    - Initializing an empty list to store all fetched tweet data.
-    - Initializing `next_cursor` to handle pagination.
-    - Loading previously processed tweet hashes to avoid duplicate processing.
+    - Defines the query parameters to search for tweets related to "piggyvest".
+    - Initializes an empty list to store all fetched tweet data.
+    - Initializes `next_cursor` to handle pagination.
+    - Loads previously processed tweet IDs to avoid duplicate processing, logging the number of IDs loaded.
 
 3. **Handling Pagination and API Requests:**
-    - Entering a loop to handle pagination and fetch all pages of data.
-    - Updating query parameters with the cursor ID if available and logging the cursor ID.
+    - Enters a loop to handle pagination and fetch all pages of data.
+    - Updates query parameters with the cursor ID if available and logs the cursor ID.
 
 4. **Retry Logic for API Requests:**
-    - Implementing a retry loop to handle potential API request failures.
-    - Logging the attempt number and waiting before retrying if an error occurs.
-    - Breaking out of the retry loop upon a successful API connection or logging failure after maximum retries.
+    - Implements a retry loop to handle potential API request failures.
+    - Logs the attempt number and waits before retrying if an error occurs.
+    - Breaks out of the retry loop upon a successful API connection or logs failure after maximum retries.
 
 5. **Processing API Response:**
-    - Parsing the JSON response from the API.
-    - Checking if the data is empty or `None`, or if the expected key (`timeline`) is missing. Logging a message if no data is received or if the data format is unexpected.
-    - Initializing a set to store new tweet hashes for deduplication.
+    - Parses the JSON response from the API.
+    - Checks if the data is empty or `None`, or if the expected key (`timeline`) is missing, and logs a message if no data is received or if the data format is unexpected.
+    - Logs the number of tweets received in each batch and the total tweets seen so far.
 
 6. **Deduplicating Tweets:**
-    - Looping through each tweet in the API response.
-    - Generating a hash for each tweet based on its ID and content.
-    - Checking if the tweet hash has already been processed.
-    - Adding unique tweets to the data list and marking duplicate tweets in the logs.
+    - Loops through each tweet in the API response.
+    - Checks if the tweet ID has already been processed.
+    - Logs duplicate tweet IDs and drops them.
+    - Adds unique tweets to the data list.
 
 7. **Handling Pagination Continuation:**
-    - Checking for the presence of a `next_cursor` in the API response to continue fetching the next page.
-    - Logging the absence of further pages and breaking the loop when no more data is available.
+    - Checks for the presence of a `next_cursor` in the API response to continue fetching the next page.
+    - Logs the absence of further pages and breaks the loop when no more data is available.
 
 8. **Saving Raw Data:**
-    - Logging the start of the raw data saving process.
-    - Writing all fetched tweet data to a JSON file in the specified format.
-    - Logging the successful saving of raw data.
+    - Logs the start of the raw data saving process.
+    - Writes all fetched tweet data to a JSON file in the specified format.
+    - Logs the successful saving of raw data.
 
-9. **Saving Processed Tweet Hashes:**
-    - Saving the hashes of newly processed tweets to a file to avoid reprocessing in future runs.
-    - Logging the completion of the extraction phase.
+9. **Saving Processed Tweet IDs:**
+    - Saves the IDs of newly processed tweets to a file to avoid reprocessing in future runs.
+    - Logs the number of new tweet IDs added to the processed tweet IDs file.
 
 10. **Returning Data and File Path:**
-    - Returning the fetched tweet data and the path to the saved raw data file.
-
+    - Returns the fetched tweet data and the path to the saved raw data file.
 
 ### Transformation
 
-## Transformations Performed
+The `transform` function processes the raw tweet data into structured CSV files. It extracts user details and tweet information, performs data cleaning and deduplication, and logs each step of the transformation process. The function returns the paths to the saved users and tweets CSV files.
 
-1. **Initializing Logging and Patterns:**
+### Steps Performed During Transformation
+
+1. **Starting the Transformation Phase:**
     - Logs the start of the transformation phase.
-    - Compiles a regex pattern to extract URLs from tweet texts.
 
-2. **Extracting User and Tweet Details:**
-    - Initializes empty lists for user details and tweet information.
-    - Loops through each tweet in the input data to extract user details and tweet information.
+2. **Data Check:**
+    - Checks if the input data is `None` and logs a message if no data is available for transformation. Exits the function early if no data is available.
 
-3. **Extracting and Cleaning User Information:**
-    - Extracts user details such as `display_name`, `username`, `user_description`, `user_id`, `followers_count`, `favourites_count`, `avatar`, `is_verified`, and `following_count`.
-    - Appends the extracted user information to the `user_details` list.
+3. **Initializing Data Structures:**
+    - Initializes empty lists for storing user details and tweet data.
+    - Logs the initialization of these lists.
 
-4. **Extracting and Cleaning Tweet Information:**
-    - Extracts hashtags and converts them to a single string.
-    - Extracts URLs from tweet text using the compiled regex pattern.
-    - Cleans the tweet text by:
-        - Removing mentions (e.g., `@username`) and URLs.
-        - Removing extra spaces.
-        - Removing non-alphanumeric characters except periods, commas, and apostrophes.
-        - Converting emojis to their text descriptions.
-    - Finds all mentions in the original tweet text.
-    - Logs the number of tweets transformed.
+4. **URL Extraction Pattern:**
+    - Defines a regular expression pattern to extract URLs from tweet text.
 
-5. **Appending Cleaned Tweet Information:**
-    - Extracts tweet details such as `tweet_id`, `user_id`, `created_at`, `text`, `url`, `mentions`, `lang`, `favorites`, `retweets`, `replies`, `quotes`, `views`, and `hashtags`.
-    - Appends the cleaned tweet information to the `tweets` list.
+5. **Processing Each Tweet:**
+    - Iterates through each tweet in the input data.
+    - Extracts and stores user details in the `user_details` list.
+    - Extracts hashtags and constructs a string of hashtag texts.
+    - Extracts URLs from tweet text using the defined pattern.
+    - Cleans tweet text by removing mentions, URLs, extra spaces, and non-alphanumeric characters.
+    - Converts emojis in the cleaned text to their text descriptions.
+    - Logs the number of tweets transformed so far.
 
-6. **Converting Lists to DataFrames:**
-    - Converts the `user_details` and `tweets` lists to DataFrames.
+6. **Extracting Tweet Information:**
+    - Constructs a dictionary of tweet information, including the cleaned text, URL, mentions, language, and engagement metrics.
+    - Adds the tweet information to the `tweets` list.
+    - Logs the completion of extracting user details and tweets.
+
+7. **Converting Lists to DataFrames:**
+    - Converts the `user_details` and `tweets` lists to pandas DataFrames.
     - Logs the successful conversion of lists to DataFrames.
 
-7. **Removing Duplicate User IDs:**
-    - Logs the initial count of users.
-    - Drops duplicate user IDs from the `df_users` DataFrame.
-    - Logs the final count of users and the number of duplicate user IDs dropped.
+8. **Dropping Duplicate User IDs:**
+    - Drops duplicate user IDs from the user DataFrame.
+    - Logs the number of duplicate user IDs dropped and the total number of unique users.
 
-8. **Removing Empty or NaN Text Rows in Tweets:**
-    - Logs the initial count of tweets.
-    - Drops rows with empty or NaN text in the `df_users_tweet` DataFrame.
-    - Logs the final count of tweets and the number of tweets dropped due to empty or NaN text.
+9. **Handling Empty or NaN Tweet Text:**
+    - Drops rows with empty or NaN tweet text from the tweet DataFrame.
+    - Logs the number of tweets dropped due to empty or NaN text.
 
-9. **Saving DataFrames to CSV Files:**
-    - Logs the start of the CSV saving process.
-    - Saves the `df_users` and `df_users_tweet` DataFrames to CSV files.
-    - Logs the successful saving of CSV files and the end of the transformation phase.
+10. **Saving DataFrames to CSV Files:**
+    - Saves the user and tweet DataFrames to CSV files.
+    - Logs the paths to the saved CSV files and the completion of the transformation phase.
 
-10. **Returning CSV File Paths:**
-    - Returns the paths to the saved users and tweets CSV files.
+11. **Handling No Data**
 
-### Handling No Data
+- If the data is `None`:
+  - Logs that there is no data to transform and exits the transformation phase.
+  - Returns `None, None`.
 
-If the data is `None`:
-- Logs that there is no data to transform and exits the transformation phase.
-- Returns `None, None`.
+### Loading Data to S3
 
-### Loading
+The `load_to_s3` function uploads a specified file to an Amazon S3 bucket. It allows for the specification of the S3 object name and handles errors that may occur during the upload process. The function returns `True` if the file is successfully uploaded, and `False` otherwise.
 
-The `load_to_s3` function uploads files to an AWS S3 bucket. It takes the file path, bucket name, and object name as arguments and logs the upload process. The function ensures data is available in S3 for Snowpipe to ingest into Snowflake.
-
-### Steps Performed During Load
+#### Steps Performed During the Load Phase
 
 1. **Starting the Load Phase:**
-    - Logging the start of the load phase for the specified file path.
+    - Logs the start of the loading phase for the specified file path.
 
 2. **Setting the S3 Object Name:**
-    - If the `object_name` is not provided, setting it to the basename of the file path.
+    - If no `object_name` is provided, the function uses the basename of the file path as the S3 object name.
 
 3. **Creating an S3 Client:**
-    - Creating an S3 client using the provided AWS access key ID and secret access key.
+    - Initializes an S3 client using the provided AWS access key and secret access key.
 
 4. **Uploading the File:**
-    - Attempting to upload the file to the specified S3 bucket and object name.
-    - Logging a success message if the file is uploaded successfully.
-    - Returning `True` to indicate a successful upload.
+    - Attempts to upload the file to the specified S3 bucket with the given object name.
+    - Logs a success message if the file is uploaded successfully.
 
 5. **Handling Upload Errors:**
-    - Catching any `ClientError` exceptions that occur during the upload process.
-    - Logging an error message if the upload fails.
-    - Returning `False` to indicate a failed upload.
+    - Catches any client errors that occur during the upload process.
+    - Logs an error message if the upload fails.
+
+6. **Returning the Result:**
+    - Returns `True` if the file is successfully uploaded, and `False` otherwise.
+
 
 ### Main Function
 
-The `main` function orchestrates the ETL process by calling the extraction, transformation, and loading functions sequentially. It ensures each phase of the ETL pipeline completes successfully and logs the process throughout.
+The `main` function orchestrates the entire ETL (Extract, Transform, Load) pipeline. It ensures each phase is executed in sequence, handles failures appropriately, and logs the progress and any issues that arise.
 
-### Steps Performed in the ETL Pipeline
+#### Steps Performed During the ETL Pipeline
 
 1. **Starting the ETL Pipeline:**
-    - Logs the initiation of the ETL pipeline process.
+    - Logs the start of the ETL pipeline process.
 
 2. **Extraction Phase:**
-    - Calls the `extract_api` function to fetch raw tweet data from the Twitter API.
-    - Receives the raw data and the path to the saved raw data file.
-    - Checks if the extraction was successful. If not, logs the failure and exits the pipeline.
+    - Calls the `extract_api` function to extract raw data from the API.
+    - Logs a message and exits if the extraction fails.
 
 3. **Transformation Phase:**
-    - Calls the `transform` function to convert the extracted raw data into structured CSV files.
-    - Receives the paths to the generated users and tweets CSV files.
-    - Checks if the transformation was successful. If not, logs the failure and exits the pipeline.
+    - Calls the `transform` function to process and structure the raw data.
+    - Logs a message and exits if the transformation fails.
 
 4. **Loading Phase:**
-    - Uploads the raw data file to the S3 bucket using the `load_to_s3` function.
-    - Uploads the users CSV file to the S3 bucket using the `load_to_s3` function.
-    - Uploads the tweets CSV file to the S3 bucket using the `load_to_s3` function.
+    - Calls the `load_to_s3` function to upload the raw data file to the S3 bucket.
+    - Uploads the transformed user and tweet data CSV files to the S3 bucket.
 
-5. **Completing the ETL Pipeline:**
-    - Logs the successful completion of the ETL pipeline.
-
+5. **Finishing the ETL Pipeline:**
+    - Logs the completion of the ETL pipeline process.
+    
 ## GitHub Actions
 ### Weekly ETL Workflow
 This workflow runs every Tuesday at noon UTC and can also be triggered manually. It performs the following steps:
