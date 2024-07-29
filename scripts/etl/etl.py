@@ -60,7 +60,7 @@ formatted_time = now.strftime(time_format)
 raw_file_path = 'data/raw/'
 raw_file_name = f'raw_data_{formatted_time}.json'
 raw_file_format = os.path.join(raw_file_path, raw_file_name)
-log_file_path = 'logs/'
+log_file_path = 'ogs/'
 log_file = os.path.join(log_file_path, 'etl_log.txt')
 processed_tweet_ids_file = os.path.join(log_file_path, 'processed_tweet_ids.txt')
 
