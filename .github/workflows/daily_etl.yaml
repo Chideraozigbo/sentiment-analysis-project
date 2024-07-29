@@ -30,6 +30,13 @@ jobs:
       - name: Ensure logs directory exists
         run: mkdir -p logs
 
+      - name: Download previous processed_tweet_hashes.txt
+        uses: actions/download-artifact@v2
+        with:
+          name: processed-tweet-hashes
+          path: logs/
+        continue-on-error: true
+
       - name: Add secrets.ini file
         run: |
           mkdir -p config
@@ -44,22 +51,28 @@ jobs:
         id: run-etl
         run: python scripts/etl/etl.py
 
-      - name: Push logs folder to GitHub
-        if: success()  # Only run if the ETL script succeeds
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add logs/
-          git commit -m "Update logs folder with latest run logs"
-          git push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload logs and processed_tweet_hashes.txt
+        uses: actions/upload-artifact@v2
+        with:
+          name: etl-logs
+          path: |
+            logs/
+            data/
 
   collect-metadata:
     runs-on: ubuntu-latest
     needs: run-etl
-    if: always()  # This job will run regardless of the outcome of the run-etl job
+    if: always()
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Download logs
+        uses: actions/download-artifact@v2
+        with:
+          name: etl-logs
+          path: .
+
       - name: Collect metadata
         id: collect-metadata
         run: |
@@ -70,6 +83,7 @@ jobs:
 
       - name: Update last run file
         run: |
+          mkdir -p logs
           if [ ! -f logs/last_run.txt ]; then
             echo "Creating last_run.txt file."
             echo "Last ETL Run:" > logs/last_run.txt
@@ -88,10 +102,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Upload processed_tweet_hashes.txt for next run
+        uses: actions/upload-artifact@v2
+        with:
+          name: processed-tweet-hashes
+          path: logs/processed_tweet_hashes.txt
+
   success-alert:
     runs-on: ubuntu-latest
     needs: run-etl
-    if: success()  # Run this job if the previous job succeeds
+    if: success()
     steps:
       - name: Send success notification
         uses: dawidd6/action-send-mail@v3
@@ -117,7 +137,7 @@ jobs:
   failure-alert:
     runs-on: ubuntu-latest
     needs: run-etl
-    if: failure()  # Run this job if the previous job fails
+    if: failure()
     steps:
       - name: Send failure alert
         uses: dawidd6/action-send-mail@v3

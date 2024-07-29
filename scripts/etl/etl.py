@@ -29,8 +29,8 @@ import time
 from requests.exceptions import RequestException
 
 # Download the stopwords dataset and the punkt tokenizer models from NLTK
-nltk.download('stopwords')
-nltk.download('punkt')
+nltk.download('stopwords', quiet=True)
+nltk.download('punkt', quiet=True)
 
 # Load my secret file
 config = configparser.ConfigParser()
@@ -59,7 +59,7 @@ formatted_time = now.strftime(time_format)
 # Parameters
 raw_file_path = 'data/raw/'
 raw_file_name = f'raw_data_{formatted_time}.json'
-raw_file_format = raw_file_path + raw_file_name
+raw_file_format = os.path.join(raw_file_path, raw_file_name)
 log_file_path = 'logs/'
 log_file = os.path.join(log_file_path, 'etl_log.txt')
 processed_tweet_ids_file = os.path.join(log_file_path, 'processed_tweet_ids.txt')
@@ -68,11 +68,16 @@ processed_tweet_ids_file = os.path.join(log_file_path, 'processed_tweet_ids.txt'
 users_csv_path = f'data/processed/users/users_{formatted_time}.csv'
 tweets_csv_path = f'data/processed/users_tweet/tweets_{formatted_time}.csv'
 
+# Create necessary directories
+os.makedirs(raw_file_path, exist_ok=True)
+os.makedirs(log_file_path, exist_ok=True)
+os.makedirs(os.path.dirname(users_csv_path), exist_ok=True)
+os.makedirs(os.path.dirname(tweets_csv_path), exist_ok=True)
+
 # Initialize log file to clear previous contents
 with open(log_file, 'w') as f:
     f.write(f"{formatted_time} - Log initialized\n")
 
-# logging Function
 def logging(message):
     """
     Logs messages to a specified log file with a timestamp.
@@ -118,8 +123,7 @@ def save_processed_tweet_ids(file_path, tweet_ids):
                 f.write(f"{tweet_id}\n")
     else:
         logging('No new tweet IDs to save')
-#%%
-# Extract_API Function
+
 def extract_api(url="https://twitter-api45.p.rapidapi.com/search.php"):
     """
     Extracts tweets from the specified API endpoint and saves raw data to a JSON file.
@@ -216,8 +220,6 @@ def extract_api(url="https://twitter-api45.p.rapidapi.com/search.php"):
     logging('Finished the Extraction Phase')
     return all_data, raw_file_format
 
-#%%
-# Transform Function
 def transform(data):
     """
     Transforms the extracted tweet data into structured CSV files.
@@ -284,9 +286,6 @@ def transform(data):
         # Convert any emojis in the cleaned text to their text descriptions
         cleaned_text = emoji.demojize(cleaned_text)
 
-        # Logging the number of tweets transformed
-        logging(f'{len(tweets)} tweets transformed successfully.')
-
         # Extract User Tweets
         tweet_info = {
             "tweet_id": tweet['tweet_id'],
@@ -314,32 +313,28 @@ def transform(data):
     logging('Successfully converted lists to DataFrames')
 
     # Drop Duplicates User ID
-    initial_user_count = len(df_users) # Get initial counts of User ID
-    df_users.drop_duplicates(subset=['user_id'], inplace=True) # Drop duplicate user IDs
-    final_user_count = len(df_users) # Get final count of users after dropping duplicates
-    dropped_user_count = initial_user_count - final_user_count # Calculate the number of dropped user IDs
+    initial_user_count = len(df_users)
+    df_users.drop_duplicates(subset=['user_id'], inplace=True)
+    final_user_count = len(df_users)
+    dropped_user_count = initial_user_count - final_user_count
 
-    # Logging the number of duplicate user IDs dropped
     logging(f'{dropped_user_count} duplicate user IDs dropped out of {initial_user_count} total users.')
 
     # Drop rows where 'text' is empty or NaN
-    initial_tweet_count = len(df_users_tweet) # Get initial count of tweets
-    df_users_tweet.dropna(subset=['text'], inplace=True) # Drop rows with empty or NaN text
-    df_users_tweet = df_users_tweet[df_users_tweet['text'].str.strip() != ''] # Drop rows where 'text' is empty after stripping spaces
-    final_tweet_count = len(df_users_tweet) # Get final count of tweets after dropping empty text
-    dropped_tweet_count = initial_tweet_count - final_tweet_count  # Calculate the number of dropped tweets
+    initial_tweet_count = len(df_users_tweet)
+    df_users_tweet.dropna(subset=['text'], inplace=True)
+    df_users_tweet = df_users_tweet[df_users_tweet['text'].str.strip() != '']
+    final_tweet_count = len(df_users_tweet)
+    dropped_tweet_count = initial_tweet_count - final_tweet_count
 
-    # Drop records where 'cleaned_text' does not contain 'piggvest'
+    # Drop records where 'text' does not contain 'piggyvest'
     before_drop = len(df_users_tweet)
-    df_users_tweet = df_users_tweet[df_users_tweet['cleaned_text'].str.contains('piggvest', case=False, na=False)]
+    df_users_tweet = df_users_tweet[df_users_tweet['text'].str.contains('piggyvest', case=False, na=False)]
     after_drop = len(df_users_tweet)
 
-    # Log the number of records dropped
     records_dropped = before_drop - after_drop
-    logging(f'Dropped {records_dropped} records because they did not contain "piggvest".')
-
+    logging(f'Dropped {records_dropped} records because they did not contain "piggyvest".')
     
-    # Logging the number of tweets dropped due to empty or NaN text
     logging(f'{dropped_tweet_count} tweets with empty or NaN text dropped out of {initial_tweet_count} total tweets.')
 
     # Save the DataFrame to CSV files
@@ -351,8 +346,7 @@ def transform(data):
     logging(f'Successfully saved tweets data to {tweets_csv_path}')
 
     return users_csv_path, tweets_csv_path
-#%%
-# load_to_s3 Function
+
 def load_to_s3(file_path, bucket_name, object_name=None):
     """
     Upload a file to an S3 bucket.
@@ -382,8 +376,7 @@ def load_to_s3(file_path, bucket_name, object_name=None):
     except ClientError as e:
         logging(f'Error uploading file to S3: {e}')
         return False
-#%%
-# main Function
+
 def main():
     """
     Main function to orchestrate the ETL pipeline.
