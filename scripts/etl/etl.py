@@ -174,6 +174,11 @@ def extract_api(url="https://twitter-api45.p.rapidapi.com/search.php"):
         
         data = response.json()
 
+        # Check if the data is empty or None
+        if not data or 'timeline' not in data:
+            logging('No data received from API or unexpected data format.')
+            return None, None
+
         # Deduplicate tweets
         new_hashes = set()
         for tweet in data.get('timeline', []):
@@ -197,14 +202,18 @@ def extract_api(url="https://twitter-api45.p.rapidapi.com/search.php"):
             logging(f'Moving to the next cursor: {next_cursor}')  # Log moving to the next cursor
 
     # Saving raw data
-    logging('Saving raw data to file')
-    with open(raw_file_format, 'w') as json_file:
-        json.dump(all_data, json_file, indent=4)
-    logging(f'Successfully saved raw data to {raw_file_format}')
-
+    if all_data:
+        logging('Saving raw data to file')
+        with open(raw_file_format, 'w') as json_file:
+            json.dump(all_data, json_file, indent=4)
+        logging(f'Successfully saved raw data to {raw_file_format}')
+    else:
+        logging('No data to save.')
+    
     save_processed_hashes(processed_hashes_file, new_hashes)  # Save new tweet hashes
     logging('Finished the Extraction Phase')
     return all_data, raw_file_format
+
 
 # Transform Function
 def transform(data):
@@ -217,6 +226,10 @@ def transform(data):
     Returns:
         tuple: A tuple containing the paths to the saved users and tweets CSV files.
     """
+    if data is None:
+        logging('No data to transform. Exiting transformation phase.')
+        return None, None
+
     logging('Starting the Transformation Phase')
      
     # URL extraction pattern
@@ -253,40 +266,23 @@ def transform(data):
         url = url_match.group(0) if url_match else None
 
         # Clean text logic
+        # Remove mentions (@username) and URLs
+        cleaned_text = re.sub(r'@\w+|http\S+', '', tweet_text)
 
-        # Find all mentions (e.g., @username) in the tweet text
-        mentions = re.findall(r'@\w+', tweet_text)
-
-        # Convert the tweet text to lowercase
-        cleaned_text = tweet_text.lower()
-
-        # Remove mentions (@username), hashtags (#hashtag), URLs, and non-word characters (punctuation, etc.)
-        cleaned_text = re.sub(r'@\w+|#\w+|http\S+|[^\w\s]', '', cleaned_text)
-
-        # Remove extra spaces by splitting the text into words and joining them back with a single space
+        # Remove extra spaces
         cleaned_text = ' '.join(cleaned_text.split())
 
-        # Tokenize the cleaned text into individual words
-        tokens = word_tokenize(cleaned_text)
+        # Remove non-alphanumeric characters except periods, commas, and apostrophes
+        cleaned_text = re.sub(r'[^\w\s.,\']', '', cleaned_text)
 
-        # Define a set of English stop words (common words that are usually removed in text processing)
-        stop_words = set(stopwords.words('english'))
+        # Find all mentions (e.g., @username) in the original tweet text
+        mentions = re.findall(r'@\w+', tweet_text)
 
-        # Remove stop words and words shorter than 3 characters from the tokens list
-        tokens = [word for word in tokens if word not in stop_words and len(word) > 2]
-
-        # Correct the spelling of each word in the tokens list
-        tokens = [Word(word).correct() for word in tokens]
-
-        # Join the tokens back into a single string
-        cleaned_text = ' '.join(tokens)
-
-        # Convert any emojis in the cleaned text to their text descriptions (e.g., ":smile:")
+        # Convert any emojis in the cleaned text to their text descriptions
         cleaned_text = emoji.demojize(cleaned_text)
 
         # Logging the number of tweets transformed
         logging(f'{len(tweets)} tweets transformed successfully.')
-
 
         # Extract User Tweets
         tweet_info = {
@@ -332,7 +328,6 @@ def transform(data):
 
     # Logging the number of tweets dropped due to empty or NaN text
     logging(f'{dropped_tweet_count} tweets with empty or NaN text dropped out of {initial_tweet_count} total tweets.')
-
 
     # Save the DataFrame to CSV files
     logging('Saving DataFrames to CSV files')
@@ -385,8 +380,16 @@ def main():
     # Extraction
     raw_data, raw_data_path = extract_api()
     
+    if raw_data is None:
+        logging('Extraction failed. Exiting ETL pipeline.')
+        return
+
     # Transformation
     users_csv, tweets_csv = transform(raw_data)
+    
+    if users_csv is None or tweets_csv is None:
+        logging('Transformation failed. Exiting ETL pipeline.')
+        return
     
     # Loading
     load_to_s3(raw_data_path, BUCKET_NAME, f'raw/{raw_file_name}')
@@ -394,6 +397,7 @@ def main():
     load_to_s3(tweets_csv, BUCKET_NAME, f'processed/users_tweet/tweets_{formatted_time}.csv')
     
     logging('Finished the ETL pipeline')
+
 
 if __name__ == "__main__":
     main()
