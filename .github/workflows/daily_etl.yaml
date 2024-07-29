@@ -2,7 +2,7 @@ name: Weekly ETL
 
 on:
   schedule:
-    - cron: "0 12 * * 2"  # Runs every Tuesday at noon UTC
+    - cron: "0 12 * * 3,5"  # Runs every Wednesday and Friday at noon UTC
   workflow_dispatch:  
 
 jobs:
@@ -44,6 +44,17 @@ jobs:
         id: run-etl
         run: python scripts/etl/etl.py
 
+      - name: Push logs folder to GitHub
+        if: success()  # Only run if the ETL script succeeds
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add logs/
+          git commit -m "Update logs folder with latest run logs"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   collect-metadata:
     runs-on: ubuntu-latest
     needs: run-etl
@@ -59,7 +70,10 @@ jobs:
 
       - name: Update last run file
         run: |
-          echo "Last ETL Run:" > logs/last_run.txt
+          if [ ! -f logs/last_run.txt ]; then
+            echo "Creating last_run.txt file."
+            echo "Last ETL Run:" > logs/last_run.txt
+          fi
           echo "Timestamp: ${{ env.TIMESTAMP }}" >> logs/last_run.txt
           echo "Records processed: ${{ env.RECORDS_PROCESSED }}" >> logs/last_run.txt
           cat logs/last_run.txt
