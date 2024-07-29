@@ -34,7 +34,7 @@ nltk.download('punkt')
 
 # Load my secret file
 config = configparser.ConfigParser()
-config.read('/Users/user/Documents/Sentiment Analysis Pipeline/config/secrets.ini')
+config.read('config/secrets.ini')
 
 # Retries Constant
 MAX_RETRIES = 3
@@ -57,16 +57,16 @@ now = datetime.now()
 formatted_time = now.strftime(time_format)
 
 # Parameters
-raw_file_path = '/Users/user/Documents/Sentiment Analysis Pipeline/data/raw/'
+raw_file_path = 'data/raw/'
 raw_file_name = f'raw_data_{formatted_time}.json'
 raw_file_format = raw_file_path + raw_file_name
-log_file_path = '/Users/user/Documents/Sentiment Analysis Pipeline/logs/'
+log_file_path = 'logs/'
 log_file = os.path.join(log_file_path, 'etl_log.txt')
 processed_tweet_ids_file = os.path.join(log_file_path, 'processed_tweet_ids.txt')
 
 # CSV file paths
-users_csv_path = f'/Users/user/Documents/Sentiment Analysis Pipeline/data/processed/users/users_{formatted_time}.csv'
-tweets_csv_path = f'/Users/user/Documents/Sentiment Analysis Pipeline/data/processed/users_tweet/tweets_{formatted_time}.csv'
+users_csv_path = f'data/processed/users/users_{formatted_time}.csv'
+tweets_csv_path = f'data/processed/users_tweet/tweets_{formatted_time}.csv'
 
 # Initialize log file to clear previous contents
 with open(log_file, 'w') as f:
@@ -328,6 +328,16 @@ def transform(data):
     df_users_tweet = df_users_tweet[df_users_tweet['text'].str.strip() != ''] # Drop rows where 'text' is empty after stripping spaces
     final_tweet_count = len(df_users_tweet) # Get final count of tweets after dropping empty text
     dropped_tweet_count = initial_tweet_count - final_tweet_count  # Calculate the number of dropped tweets
+
+    # Drop records where 'cleaned_text' does not contain 'piggvest'
+    before_drop = len(df_users_tweet)
+    df_users_tweet = df_users_tweet[df_users_tweet['cleaned_text'].str.contains('piggvest', case=False, na=False)]
+    after_drop = len(df_users_tweet)
+
+    # Log the number of records dropped
+    records_dropped = before_drop - after_drop
+    logging(f'Dropped {records_dropped} records because they did not contain "piggvest".')
+
     
     # Logging the number of tweets dropped due to empty or NaN text
     logging(f'{dropped_tweet_count} tweets with empty or NaN text dropped out of {initial_tweet_count} total tweets.')
