@@ -48,10 +48,9 @@ jobs:
         run: |
           git config --global user.name "Chidera Ozigbo"
           git config --global user.email "chideraozigbo@gmail.com"
-          git remote set-url origin https://Chideraozigbo:${{ secrets.PAT_TOKEN }}@github.com/Chideraozigbo/sentiment-analysis-project.git
           git add logs/etl_log.txt logs/processed_tweet_hashes.txt
           git commit -m "Update logs after ETL job"
-          git push origin main
+          git push "https://${{ secrets.PAT_TOKEN }}@github.com/Chideraozigbo/sentiment-analysis-project.git" HEAD:main
 
   success-alert:
     runs-on: ubuntu-latest
