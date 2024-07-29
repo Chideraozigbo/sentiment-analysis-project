@@ -34,7 +34,7 @@ nltk.download('punkt')
 
 # Load my secret file
 config = configparser.ConfigParser()
-config.read('/Users/user/Desktop/Sentiment-Analysis-Project/config/secrets.ini')
+config.read('config/secrets.ini')
 
 # Retries Constant
 MAX_RETRIES = 3
@@ -57,16 +57,16 @@ now = datetime.now()
 formatted_time = now.strftime(time_format)
 
 # Parameters
-raw_file_path = '/Users/user/Desktop/Sentiment-Analysis-Project/data/raw/'
+raw_file_path = 'data/raw/'
 raw_file_name = f'raw_data_{formatted_time}.json'
 raw_file_format = raw_file_path + raw_file_name
-log_file_path = '/Users/user/Desktop/Sentiment-Analysis-Project/logs/'
+log_file_path = 'logs/'
 log_file = os.path.join(log_file_path, 'etl_log.txt')
 processed_tweet_ids_file = os.path.join(log_file_path, 'processed_tweet_ids.txt')
 
 # CSV file paths
-users_csv_path = f'/Users/user/Desktop/Sentiment-Analysis-Project/data/processed/users/users_{formatted_time}.csv'
-tweets_csv_path = f'/Users/user/Desktop/Sentiment-Analysis-Project/data/processed/users_tweet/tweets_{formatted_time}.csv'
+users_csv_path = f'data/processed/users/users_{formatted_time}.csv'
+tweets_csv_path = f'data/processed/users_tweet/tweets_{formatted_time}.csv'
 
 # Initialize log file to clear previous contents
 with open(log_file, 'w') as f:
