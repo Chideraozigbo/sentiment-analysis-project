@@ -2,7 +2,7 @@ name: Weekly ETL
 
 on:
   schedule:
-    - cron: "0 12 * * 3,5"  # Runs every Wednesday and Friday at noon UTC
+    - cron: "0 12 1 1 *"  # Runs every Wednesday and Friday at noon UTC
   workflow_dispatch:  
 
 jobs:
