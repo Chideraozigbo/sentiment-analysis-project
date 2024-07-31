@@ -19,6 +19,7 @@
 15. [GitHub Actions](#github-actions)
 16. [Setup Instructions](#setup-instructions)
 17. [IAM Configuration](#iam-configuration-guide)
+18. [Snowpipe and Event Notification Setup](#snowpipe-and-event-notification-setup)
 
 ## Project Overview
 This project aims to perform sentiment analysis on Twitter data to provide insights into public sentiment towards a specific brand. The pipeline involves extracting data from the Twitter API, transforming the raw data into structured formats, and loading the processed data into an AWS S3 bucket. Snowpipe listens for new files in the S3 bucket and loads them into a Snowflake data warehouse for further analysis. The orchestration of this pipeline is managed using GitHub Actions due to cost considerations and ease of use.
@@ -788,5 +789,208 @@ Here are the steps I took for create my IAM Configuration
 3. In the **"User groups"** tab, choose **"Add user to groups."**
 4. Select the `DataTeam` group.
 5. Choose **"Add to group."**
+
+## Snowpipe and Event Notification Setup
+
+### 1. Create Database, Warehouse, and Schema
+
+First, set up the foundational structures in Snowflake:
+
+```sql
+-- Create Database
+CREATE OR REPLACE DATABASE sentiment_database;
+
+-- Create Warehouse
+CREATE OR REPLACE WAREHOUSE sentiment_warehouse;
+
+-- Create Schema
+CREATE OR REPLACE SCHEMA sentiment_schema;
+```
+### 2. Create Tables
+Set up the fact and dimension tables:
+
+```sql
+-- Create fact_users table
+CREATE OR REPLACE TABLE fact_users (
+    display_name VARCHAR(200),
+    username VARCHAR(500),
+    user_description VARCHAR(200),
+    user_id INTEGER,  
+    followers_count INTEGER,
+    favourites_count INTEGER,
+    avatar VARCHAR(500),       
+    is_verified BOOLEAN,
+    following_count INTEGER,
+    PRIMARY KEY (user_id)  
+);
+
+-- Create dim_tweets table
+CREATE OR REPLACE TABLE dim_tweets (
+    tweet_id INTEGER PRIMARY KEY,
+    user_id INTEGER,
+    created_at TIMESTAMPTZ,
+    text VARCHAR(4000), 
+    url VARCHAR(500), 
+    mentions VARCHAR(500), 
+    lang VARCHAR(6),  
+    favourites INTEGER,
+    retweets INTEGER,
+    replies INTEGER,
+    quotes INTEGER,
+    view_count INTEGER,  
+    hashtags VARCHAR(1000),  
+    FOREIGN KEY (user_id) REFERENCES fact_users(user_id)
+);
+```
+
+### 3. Create File Format
+Define the file format for your CSV files:
+
+```sql
+-- Create file format schema
+CREATE OR REPLACE SCHEMA file_format_schema;
+
+-- Create CSV file format
+CREATE OR REPLACE FILE FORMAT csv_format_csv
+  TYPE = 'CSV'
+  FIELD_OPTIONALLY_ENCLOSED_BY = '"'
+  FIELD_DELIMITER = ','
+  SKIP_HEADER = 1
+  NULL_IF = ('NULL', 'null')
+  EMPTY_FIELD_AS_NULL = TRUE
+  RECORD_DELIMITER = '\n';
+  ```
+### 4. Create Staging Areas
+Set up external stages for your S3 buckets:
+
+```sql
+-- Create staging schema
+CREATE OR REPLACE SCHEMA staging_schema;
+
+-- Create stage for tweets
+CREATE OR REPLACE STAGE sentiment_stage_tweets
+  URL = 's3://sentimentanalysisprojectpipeline/processed/users_tweet/'
+  CREDENTIALS = (AWS_KEY_ID = 'your-aws-key-id'
+                 AWS_SECRET_KEY = 'your-aws-secret-key')
+  FILE_FORMAT = sentiment_database.file_format_schema.csv_format_csv;
+
+-- Create stage for users
+CREATE OR REPLACE STAGE sentiment_stage_users
+  URL = 's3://sentimentanalysisprojectpipeline/processed/users/'
+  CREDENTIALS = (AWS_KEY_ID = 'your-aws-key-id'
+                 AWS_SECRET_KEY = 'your-aws-secret-key')
+  FILE_FORMAT = sentiment_database.file_format_schema.csv_format_csv;
+```
+
+Replace `your-aws-key-id` and `your-aws-secret-key` with your actual AWS credentials.
+
+### 5. Create Snowpipes
+Set up Snowpipes for automatic data ingestion:
+```sql
+-- Create pipe schema
+CREATE OR REPLACE SCHEMA sentiment_schema_pipe;
+
+-- Create pipe for users
+CREATE OR REPLACE PIPE sentiment_user_pipe
+AUTO_INGEST = TRUE
+AS
+COPY INTO sentiment_database.sentiment_schema.fact_users
+FROM @sentiment_database.staging_schema.sentiment_stage_users
+ON_ERROR = 'CONTINUE';
+
+-- Create pipe for tweets
+CREATE OR REPLACE PIPE sentiment_tweet_pipe
+AUTO_INGEST = TRUE
+AS
+COPY INTO sentiment_database.sentiment_schema.dim_tweets
+FROM @sentiment_database.staging_schema.sentiment_stage_tweets
+ON_ERROR = 'CONTINUE';
+```
+### 6. Set Up S3 Event Notifications
+To set up S3 event notifications:
+
+1. Go to your S3 bucket in the AWS Management Console.
+2. Select the "Properties" tab.
+3. Scroll down to "Event Notifications" and click "Create event notification".
+4. Configure the event:
+   - Name your event
+   - Select the event types (typically "All object create events")
+   - Choose "SQS queue" as the destination
+   - Select the SQS queue that corresponds to your Snowpipe (you can find this in the pipe description)
+
+Repeat this process for both your users and tweets S3 buckets.
+
+Here is a snapshot of the lists of my event notifications
+
+![Event Notification](docs/images/event_notification.png)
+
+
+N.B: To get your SQS Queue. Run this sql query on your pipe
+``` sql
+DESC PIPE sentiment_user_pipe;
+DESC PIPE sentiment_tweet_pipe;
+```
+You should see this under notification channel, copy and paste it as your SQS Queue topic:
+![SQS Queue](docs/images/sqs.png)
+
+### 7. Verify Pipe Status and Describe Pipes
+Check the status of your pipes and view their details:
+
+```sql
+-- Check pipe status
+SELECT system$pipe_status('sentiment_schema_pipe.sentiment_user_pipe');
+SELECT system$pipe_status('sentiment_schema_pipe.sentiment_tweet_pipe');
+
+-- Describe pipes
+DESC PIPE sentiment_user_pipe;
+DESC PIPE sentiment_tweet_pipe;
+```
+### 8. Set Up Access Control
+Create roles and users, and grant appropriate privileges:
+```sql
+-- Create roles
+CREATE ROLE data_scientist;
+CREATE ROLE data_analyst;
+
+-- Create users
+CREATE USER Honour
+  PASSWORD = 'your-password'
+  DEFAULT_ROLE = data_analyst;
+
+CREATE USER Chibuike
+  PASSWORD = 'your-password'
+  DEFAULT_ROLE = data_scientist;
+
+-- Assign users to roles
+GRANT ROLE data_scientist TO USER Chibuike;
+GRANT ROLE data_analyst TO USER Honour;
+
+-- Grant privileges to roles
+GRANT USAGE ON WAREHOUSE sentiment_warehouse TO ROLE data_analyst;
+GRANT USAGE ON WAREHOUSE sentiment_warehouse TO ROLE data_scientist;
+
+GRANT USAGE ON DATABASE sentiment_database TO ROLE data_analyst;
+GRANT USAGE ON DATABASE sentiment_database TO ROLE data_scientist;
+
+GRANT USAGE ON SCHEMA sentiment_schema TO ROLE data_analyst;
+GRANT USAGE ON SCHEMA sentiment_schema TO ROLE data_scientist;
+
+-- Grant table-specific privileges
+GRANT SELECT ON TABLE sentiment_database.sentiment_schema.FACT_USERS TO ROLE data_analyst;
+GRANT INSERT, UPDATE, SELECT ON TABLE sentiment_database.sentiment_schema.FACT_USERS TO ROLE data_scientist;
+
+GRANT SELECT ON TABLE sentiment_database.sentiment_schema.dim_tweets TO ROLE data_analyst;
+GRANT INSERT, UPDATE, SELECT ON TABLE sentiment_database.sentiment_schema.dim_tweets TO ROLE data_scientist;
+```
+
+### 9. Monitor Data Loading
+You can monitor the data loading process using the COPY_HISTORY view:
+```sql
+SELECT * FROM INFORMATION_SCHEMA.LOAD_HISTORY;
+```
+
+
+
+
 
 

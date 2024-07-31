@@ -100,6 +100,6 @@ jobs:
             Commit Message: ${{ github.event.head_commit.message }}
 
             Please check the logs for more details.
-          to: 'chideraozigbo@gmail.com'
+          to: 'chideraozigbo@gmail.com, onubawinner042@gmail.com, honourdaniel987@gmail.com'
           from: Auto-Reports
           content_type: text/plain
