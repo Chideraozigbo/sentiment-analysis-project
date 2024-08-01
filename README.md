@@ -20,7 +20,7 @@
 16. [Setup Instructions](#setup-instructions)
 17. [IAM Configuration](#iam-configuration-guide)
 18. [Snowpipe and Event Notification Setup](#snowpipe-and-event-notification-setup)
-19. [Random Photos & Conclusion](#)
+19. [Random Photos & Conclusion](#random-photos--conclusion)
 
 ## Project Overview
 This project aims to perform sentiment analysis on Twitter data to provide insights into public sentiment towards a specific brand. The pipeline involves extracting data from the Twitter API, transforming the raw data into structured formats, and loading the processed data into an AWS S3 bucket. Snowpipe listens for new files in the S3 bucket and loads them into a Snowflake data warehouse for further analysis. The orchestration of this pipeline is managed using GitHub Actions due to cost considerations and ease of use.
