@@ -7,7 +7,7 @@
 4. [Contributors](#contributors)
 5. [Team Members Task](#team-members-task)
 6. [Project Timeline](#project-timeline)
-7. [Why Choosing Piggyvest](#why-moniepoint-was-chosen)
+7. [Why Choosing Piggyvest](#why-piggyvest-was-chosen)
    - [Proposed Brand](#proposed-brands)
 8. [System Architecture](#system-architecture)
 9. [Technology Stack](#technology-stack)
@@ -248,7 +248,7 @@ This project relies on several Python libraries and modules to perform various t
 File Structure
 ├── .github
 │   └── workflows
-│       ├── daily_etl.yaml
+│       ├── daily_etl.yaml    
 │       └── push-notification.yaml
 ├── config
 │   └── secrets.ini
@@ -320,7 +320,7 @@ File Structure
 | display_name       | TEXT      | NOT NULL                 | User's display name              |
 | username           | TEXT      | NOT NULL                 | User's actual name               |
 | user_description   | TEXT      | NULL                     | Description of the user          |
-| user_id            | INTEGER      | PRIMARY KEY, NOT NULL    | Unique identifier for the user   |
+| user_id            | INTEGER   | PRIMARY KEY, NOT NULL    | Unique identifier for the user   |
 | followers_count    | INTEGER   | NOT NULL                 | Number of followers              |
 | favourites_count   | INTEGER   | NOT NULL                 | Number of favorites              |
 | avatar             | TEXT      | NULL                     | URL of the user's avatar         |
@@ -331,8 +331,8 @@ File Structure
 
 | Column         | Data Type | Constraints              | Description                                |
 |----------------|-----------|--------------------------|--------------------------------------------|
-| tweet_id       | INTEGER      | PRIMARY KEY, NOT NULL    | Unique identifier for the tweet            |
-| user_id        | INTEGER      | FOREIGN KEY, NOT NULL    | ID of the user who posted the tweet        |
+| tweet_id       | INTEGER   | PRIMARY KEY, NOT NULL    | Unique identifier for the tweet            |
+| user_id        | INTEGER   | FOREIGN KEY, NOT NULL    | ID of the user who posted the tweet        |
 | created_at     | TIMESTAMP | NOT NULL                 | Timestamp when the tweet was created       |
 | text           | TEXT      | NOT NULL                 | Cleaned text of the tweet                  |
 | url            | TEXT      | NULL                     | URL present in the tweet                   |
