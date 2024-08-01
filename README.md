@@ -20,6 +20,7 @@
 16. [Setup Instructions](#setup-instructions)
 17. [IAM Configuration](#iam-configuration-guide)
 18. [Snowpipe and Event Notification Setup](#snowpipe-and-event-notification-setup)
+19. [Random Photos & Conclusion](#)
 
 ## Project Overview
 This project aims to perform sentiment analysis on Twitter data to provide insights into public sentiment towards a specific brand. The pipeline involves extracting data from the Twitter API, transforming the raw data into structured formats, and loading the processed data into an AWS S3 bucket. Snowpipe listens for new files in the S3 bucket and loads them into a Snowflake data warehouse for further analysis. The orchestration of this pipeline is managed using GitHub Actions due to cost considerations and ease of use.
@@ -988,9 +989,44 @@ You can monitor the data loading process using the COPY_HISTORY view:
 ```sql
 SELECT * FROM INFORMATION_SCHEMA.LOAD_HISTORY;
 ```
+## Random Photos & Conclusion
+
+### Random Photos
+![Snowflake Datawarehouse](docs/images/DW1.png)
+Photo of the dim_users table 
+
+![Snowflake Datawarehouse](docs/images/DW2.png)
+Photo of the fact_tweets table 
+
+
+### Conclusion
+
+In this project, we have successfully set up an end-to-end ETL pipeline for sentiment analysis on Twitter data. This pipeline includes the extraction of data from the Twitter API, transformation of raw data into a structured format, and loading of the processed data into an AWS S3 bucket and subsequently into Snowflake for further analysis. 
+
+### Key Achievements
+- **Automated Data Extraction:** Utilized the Twitter API to fetch real-time tweets and user data.
+- **Data Transformation:** Cleaned and structured the data to ensure consistency and quality, ready for analysis.
+- **Data Loading:** Implemented mechanisms to load data into AWS S3 and Snowflake, ensuring scalability and accessibility for analysis.
+- **Logging and Monitoring:** Set up comprehensive logging to track the ETL process, helping in monitoring and debugging.
+- **Retries and Failures Handling:** Added retry mechanisms to handle transient failures, ensuring the robustness of the pipeline.
+- **Collaborative Team Effort:** Successfully coordinated the efforts of data engineers, data scientists, and data analysts to achieve a seamless workflow from data extraction to analysis and reporting.
+
+### Team Contributions
+- **Data Engineer:** Designed and implemented the ETL pipeline, set up the AWS S3 bucket and Snowflake database, and ensured data integrity and quality.
+- **Data Scientist:** Developed the data cleaning and transformation logic, performed sentiment analysis on the processed data, and provided insights.
+- **Data Analyst:** Analyzed the sentiment data, created visualizations and reports, and provided actionable insights for the business.
 
 
 
+### Next Steps
+- **Scale the Pipeline:** Enhance the pipeline to handle larger datasets and more complex transformations.
+- **Advanced Analysis:** Implement more sophisticated analytics and machine learning models to derive deeper insights.
+- **Real-Time Processing:** Explore real-time data processing to provide up-to-the-minute sentiment analysis.
+- **Expand Data Sources:** Integrate additional social media platforms and data sources to enrich the analysis.
+
+By following this documentation, you should be able to replicate and extend the ETL pipeline for sentiment analysis, adapting it to various datasets and analysis requirements. The detailed steps provided ensure that you can set up, configure, and run the pipeline effectively, gaining valuable insights from social media data.
+
+Feel free to reach out if you have any questions or need further assistance with the project.
 
 
 
