@@ -1,0 +1,6 @@
+config/secrets.ini
+.DS_Store
+data/.DS_Store
+docs/.DS_Store
+scripts/.DS_Store
+scripts/etl/testing.py

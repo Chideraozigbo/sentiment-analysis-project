@@ -1,0 +1,9 @@
+Create a folder in this directory called 'secrets.ini' and replace the values with yours
+
+[API_KEY]
+x-rapidapi-key = your key
+x-rapidapi-host = your host
+
+[AWS_CREDENTIALS]
+ACCESS_KEY_ID = your aws key id
+SECRET_ACCESS_KEY = your aws secret access

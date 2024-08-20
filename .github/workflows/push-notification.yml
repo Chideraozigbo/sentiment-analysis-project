@@ -1,0 +1,58 @@
+name: Push Notification
+
+on:
+  push:
+    branches:
+      - '*'
+
+jobs:
+  send-email:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Get push details
+        id: push-details
+        run: |
+          echo "PUSHER=${{ github.actor }}" >> $GITHUB_ENV
+          echo "BRANCH=${{ github.ref_name }}" >> $GITHUB_ENV
+          echo "TIMESTAMP=$(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_ENV
+          echo "COMMIT_MSG=$(git log -1 --pretty=%B)" >> $GITHUB_ENV
+          echo "CHANGES<<EOF" >> $GITHUB_ENV
+          git diff-tree --no-commit-id --name-status -r ${{ github.sha }} >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Send email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.EMAIL_USER }}
+          password: ${{ secrets.EMAIL_PASS }}
+          subject: New push to ${{ github.repository }}
+          body: |
+            Repository Update Notification
+
+            Repository: ${{ github.repository }}
+            Owner: ${{ github.repository_owner }}
+            Pusher: ${{ env.PUSHER }}
+            Branch: ${{ env.BRANCH }}
+            Time: ${{ env.TIMESTAMP }}
+            Commit Message: ${{ env.COMMIT_MSG }}
+
+            Changes:
+            - Modified:
+            - Added:
+            - Deleted:
+            ${{ env.CHANGES }}
+
+            Full Commit: ${{ github.event.head_commit.url }}
+
+            This is an automated message. Please do not reply.
+          to: 'chideraozigbo@gmail.com, onubawinner042@gmail.com, honourdaniel987@gmail.com'
+          from: Auto-Reports
+          content_type: text/plain
